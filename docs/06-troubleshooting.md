@@ -120,3 +120,129 @@ docs/
 문제 해결 과정이 명확하게 드러나도록 작성한다.
 
 코드보다 문제 해결 과정과 의사결정 이유를 중심으로 기록한다.
+
+---
+
+# 실제 트러블슈팅 기록
+
+## 1. Spring Boot DataSource 설정 오류
+
+### 문제
+
+Spring Boot 실행 시 다음 오류가 발생하였다.
+
+```text
+Failed to configure a DataSource
+url attribute is not specified
+```
+
+### 원인 분석
+
+Spring Data JPA와 MySQL Driver를 프로젝트에 추가했지만, 아직 MySQL 연결 정보를 설정하지 않은 상태였다.
+
+### 해결 방법
+
+초기 개발 단계에서는 데이터베이스 연결보다 Spring Boot 실행 확인이 우선이므로 DataSource 자동 설정을 임시로 제외하였다.
+
+```yaml
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+```
+
+### 결과
+
+데이터베이스 연결 없이 Spring Boot 애플리케이션 실행에 성공하였다.
+
+---
+
+## 2. OneDrive 경로 사용으로 인한 Gradle 빌드 오류
+
+### 문제
+
+프로젝트 빌드 중 다음 오류가 발생하였다.
+
+```text
+Unable to delete directory 'build/classes/java/main'
+```
+
+### 원인 분석
+
+프로젝트가 OneDrive 경로 내부에 위치해 있었으며 OneDrive 동기화 또는 실행 중인 Java 프로세스가 build 폴더를 점유하고 있었다.
+
+### 해결 방법
+
+프로젝트 위치를 다음 경로로 변경하였다.
+
+```text
+C:\youth-policy-platform
+```
+
+### 결과
+
+Gradle 빌드 오류가 해결되었고 Spring Boot 애플리케이션이 정상 실행되었다.
+
+---
+
+## 3. GitHub Push 권한 오류
+
+### 문제
+
+GitHub Push 시 다음 오류가 발생하였다.
+
+```text
+Permission to txehyxn/youth-policy-platform.git denied to taetaeq
+```
+
+### 원인 분석
+
+Windows에 저장된 GitHub 자격 증명이 현재 사용하려는 GitHub 계정과 달랐다.
+
+### 해결 방법
+
+Windows 자격 증명 관리자에서 GitHub 관련 자격 증명을 삭제한 후 올바른 GitHub 계정으로 다시 로그인하였다.
+
+### 결과
+
+GitHub 인증 문제가 해결되었으며 정상적으로 Push가 가능해졌다.
+
+---
+
+## 4. GitHub 원격 저장소 병합 충돌
+
+### 문제
+
+최초 Push 시 다음 오류가 발생하였다.
+
+```text
+Updates were rejected because the remote contains work that you do not have locally
+```
+
+이후 병합 과정에서 다음 충돌이 발생하였다.
+
+```text
+CONFLICT (add/add): Merge conflict in .gitignore
+```
+
+### 원인 분석
+
+GitHub 저장소에는 README 및 문서 파일이 존재했고, 로컬 저장소에는 Spring Boot 프로젝트가 존재하여 서로 다른 Git 이력을 가지고 있었다.
+
+### 해결 방법
+
+```bash
+git pull origin main --allow-unrelated-histories
+```
+
+명령어로 병합을 수행한 후 `.gitignore` 충돌을 해결하였다.
+
+```bash
+git checkout --ours .gitignore
+git add .gitignore
+git commit -m "merge: GitHub 원격 저장소 병합"
+```
+
+### 결과
+
+로컬 프로젝트와 GitHub 저장소가 정상적으로 병합되었고 Push에 성공하였다.
