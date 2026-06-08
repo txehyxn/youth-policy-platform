@@ -1,8 +1,12 @@
 package com.taehyun.youthpolicyplatform.user.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 // 회원 정보를 저장하는 엔티티
+@Getter
+@NoArgsConstructor
 @Entity
 public class User {
 
