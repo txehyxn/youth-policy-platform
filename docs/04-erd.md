@@ -12,34 +12,64 @@
 
 ## users
 
-회원 정보
+회원 계정 정보
 
-| 컬럼명        | 설명           |
-| ---------- | ------------ |
-| id         | 회원 PK        |
-| email      | 이메일          |
-| password   | 비밀번호         |
-| role       | USER / ADMIN |
-| created_at | 생성일          |
+| 컬럼명        | 설명                         |
+| ---------- | -------------------------- |
+| id         | 회원 PK                      |
+| email      | 이메일                        |
+| password   | 비밀번호                       |
+| role       | USER / ADMIN / SUPER_ADMIN |
+| created_at | 생성일                        |
+| updated_at | 수정일                        |
+
+### role 설계
+
+| role        | 설명                      |
+| ----------- | ----------------------- |
+| USER        | 일반 사용자                  |
+| ADMIN       | 정책 등록 및 수정 관리자          |
+| SUPER_ADMIN | 관리자 권한 부여 및 전체 관리 권한 보유 |
+
+설계 이유:
+
+* 일반 사용자와 관리자의 기능 접근 범위를 분리하기 위함
+* 최고 관리자가 관리자 권한을 부여하거나 회수할 수 있는 구조를 고려
+* 향후 Spring Security 권한 제어에 활용 가능
 
 ---
 
 ## user_profiles
 
-정책 판별에 필요한 사용자 정보
+정책 판별에 공통적으로 사용되는 사용자 기본 조건 정보
 
-| 컬럼명               | 설명       |
-| ----------------- | -------- |
-| id                | PK       |
-| user_id           | 회원 FK    |
-| age               | 나이       |
-| region            | 거주 지역    |
-| household_size    | 가구원 수    |
-| monthly_income    | 월소득      |
-| annual_income     | 연소득      |
-| employment_status | 취업 여부    |
-| student_status    | 학생 여부    |
-| house_owner       | 주택 소유 여부 |
+| 컬럼명                   | 설명      |
+| --------------------- | ------- |
+| id                    | 프로필 PK  |
+| user_id               | 회원 FK   |
+| age                   | 나이      |
+| region                | 거주 지역   |
+| household_size        | 가구원 수   |
+| monthly_income        | 월소득     |
+| annual_income         | 연소득     |
+| middle_income_percent | 중위소득 비율 |
+| employed              | 취업 여부   |
+| student               | 학생 여부   |
+| house_owner           | 무주택 여부  |
+
+### users - user_profiles 관계
+
+```text
+users 1 : 1 user_profiles
+```
+
+설계 이유:
+
+* 로그인 계정 정보와 정책 판별용 정보를 분리하기 위함
+* User는 인증 및 권한 관리에 집중
+* UserProfile은 나이, 지역, 소득, 무주택 여부 등 정책 판별 조건에 집중
+* 회원가입 후 사용자가 프로필을 작성하는 흐름을 지원
+* 정책별 추가 조건은 UserProfile에 저장하지 않고 정책 상세 화면에서 별도 입력받도록 설계
 
 ---
 
@@ -55,6 +85,8 @@
 | support_amount  | 지원 내용   |
 | application_url | 신청 링크   |
 | category_id     | 카테고리 FK |
+| created_at      | 생성일     |
+| updated_at      | 수정일     |
 
 ---
 
@@ -67,7 +99,7 @@
 | id   | PK    |
 | name | 카테고리명 |
 
-예시
+예시:
 
 * 주거
 * 금융
@@ -91,14 +123,38 @@ Eligibility Engine 핵심 테이블
 | value      | 기준값    |
 | required   | 필수 여부  |
 
-예시
+예시:
 
-| field_name     | operator | value |
-| -------------- | -------- | ----- |
-| age            | >=       | 19    |
-| age            | <=       | 34    |
-| house_owner    | =        | false |
-| income_percent | <=       | 60    |
+| field_name            | operator | value    |
+| --------------------- | -------- | -------- |
+| age                   | >=       | 19       |
+| age                   | <=       | 34       |
+| region                | IN       | 수원,서울,경기 |
+| house_owner           | =        | false    |
+| middle_income_percent | <=       | 60       |
+
+### benefit_conditions 설계 이유
+
+정책마다 필요한 조건이 다르기 때문에 조건을 코드에 직접 작성하지 않고 데이터베이스에서 관리한다.
+
+예를 들어 청년월세지원과 청년도약계좌는 각각 다른 조건을 가진다.
+
+```text
+청년월세지원
+- age >= 19
+- age <= 34
+- house_owner = false
+- middle_income_percent <= 60
+```
+
+```text
+청년도약계좌
+- age >= 19
+- age <= 34
+- annual_income <= 75000000
+```
+
+이 구조를 통해 새로운 정책이 추가되더라도 코드 수정이 아닌 데이터 추가로 확장할 수 있다.
 
 ---
 
@@ -125,7 +181,7 @@ Eligibility Engine 핵심 테이블
 | benefit_id    | 정책 FK |
 | document_name | 서류명   |
 
-예시
+예시:
 
 * 주민등록등본
 * 소득증빙서류
@@ -142,6 +198,7 @@ Eligibility Engine 핵심 테이블
 | id         | PK    |
 | user_id    | 회원 FK |
 | benefit_id | 정책 FK |
+| created_at | 생성일   |
 
 ---
 
@@ -161,8 +218,10 @@ Eligibility Engine 핵심 테이블
 
 # ERD 설계 핵심
 
-본 프로젝트는 정책 조건을 컬럼으로 직접 구현하지 않고 benefit_conditions 테이블로 분리하였다.
+본 프로젝트는 정책 조건을 컬럼으로 직접 구현하지 않고 `benefit_conditions` 테이블로 분리하였다.
 
 이를 통해 새로운 정책이 추가되더라도 데이터만 추가하면 되며, 코드 수정 없이 확장이 가능하다.
+
+또한 사용자 정보는 `users`와 `user_profiles`로 분리하여 인증 정보와 정책 판별 정보를 독립적으로 관리하도록 설계하였다.
 
 이는 본 프로젝트의 핵심 설계 철학인 Data Driven Eligibility Engine 구현을 위한 구조이다.
