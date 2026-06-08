@@ -14,14 +14,14 @@
 
 회원 계정 정보
 
-| 컬럼명        | 설명                         |
-| ---------- | -------------------------- |
-| id         | 회원 PK                      |
-| email      | 이메일                        |
-| password   | 비밀번호                       |
-| role       | USER / ADMIN / SUPER_ADMIN |
-| created_at | 생성일                        |
-| updated_at | 수정일                        |
+| 컬럼명        | 설명                           |
+| ---------- | ---------------------------- |
+| id         | 회원 PK                        |
+| email      | 이메일                          |
+| password   | 비밀번호                         |
+| role       | USER / ADMIN / SUPER_ADMIN   |
+| created_at | 생성일, 추후 BaseTimeEntity 적용 예정 |
+| updated_at | 수정일, 추후 BaseTimeEntity 적용 예정 |
 
 ### role 설계
 
@@ -73,23 +73,6 @@ users 1 : 1 user_profiles
 
 ---
 
-## benefits
-
-정책 기본 정보
-
-| 컬럼명             | 설명      |
-| --------------- | ------- |
-| id              | PK      |
-| title           | 정책명     |
-| description     | 정책 설명   |
-| support_amount  | 지원 내용   |
-| application_url | 신청 링크   |
-| category_id     | 카테고리 FK |
-| created_at      | 생성일     |
-| updated_at      | 수정일     |
-
----
-
 ## benefit_categories
 
 정책 카테고리
@@ -105,6 +88,37 @@ users 1 : 1 user_profiles
 * 금융
 * 취업
 * 교육
+* 창업
+* 복지
+
+---
+
+## benefits
+
+정책 기본 정보
+
+| 컬럼명             | 설명                           |
+| --------------- | ---------------------------- |
+| id              | PK                           |
+| title           | 정책명                          |
+| description     | 정책 설명                        |
+| support_amount  | 지원 내용                        |
+| application_url | 신청 링크                        |
+| category_id     | 카테고리 FK                      |
+| created_at      | 생성일, 추후 BaseTimeEntity 적용 예정 |
+| updated_at      | 수정일, 추후 BaseTimeEntity 적용 예정 |
+
+### benefit_categories - benefits 관계
+
+```text
+benefit_categories 1 : N benefits
+```
+
+설계 이유:
+
+* 정책을 주거, 금융, 취업, 교육, 창업, 복지 등으로 분류하기 위함
+* 사용자에게 카테고리별 정책 조회 기능을 제공하기 위함
+* 관리자 정책 등록 시 정책 분류를 명확히 하기 위함
 
 ---
 
@@ -133,9 +147,17 @@ Eligibility Engine 핵심 테이블
 | house_owner           | =        | false    |
 | middle_income_percent | <=       | 60       |
 
-### benefit_conditions 설계 이유
+### benefits - benefit_conditions 관계
 
-정책마다 필요한 조건이 다르기 때문에 조건을 코드에 직접 작성하지 않고 데이터베이스에서 관리한다.
+```text
+benefits 1 : N benefit_conditions
+```
+
+설계 이유:
+
+* 하나의 정책은 여러 개의 신청 조건을 가질 수 있음
+* 정책마다 필요한 조건이 다르기 때문에 조건을 코드에 직접 작성하지 않고 데이터베이스에서 관리
+* 새로운 정책 추가 시 코드 수정이 아닌 데이터 추가로 확장 가능
 
 예를 들어 청년월세지원과 청년도약계좌는 각각 다른 조건을 가진다.
 
@@ -153,8 +175,6 @@ Eligibility Engine 핵심 테이블
 - age <= 34
 - annual_income <= 75000000
 ```
-
-이 구조를 통해 새로운 정책이 추가되더라도 코드 수정이 아닌 데이터 추가로 확장할 수 있다.
 
 ---
 
@@ -223,5 +243,7 @@ Eligibility Engine 핵심 테이블
 이를 통해 새로운 정책이 추가되더라도 데이터만 추가하면 되며, 코드 수정 없이 확장이 가능하다.
 
 또한 사용자 정보는 `users`와 `user_profiles`로 분리하여 인증 정보와 정책 판별 정보를 독립적으로 관리하도록 설계하였다.
+
+정책 정보는 `benefit_categories`, `benefits`, `benefit_conditions`로 분리하여 카테고리 분류, 정책 기본 정보, 정책 조건을 각각 독립적으로 관리한다.
 
 이는 본 프로젝트의 핵심 설계 철학인 Data Driven Eligibility Engine 구현을 위한 구조이다.
