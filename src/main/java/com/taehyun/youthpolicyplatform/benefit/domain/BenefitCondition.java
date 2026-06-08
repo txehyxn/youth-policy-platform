@@ -1,8 +1,12 @@
 package com.taehyun.youthpolicyplatform.benefit.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 // 정책 신청 조건을 저장하는 엔티티
+@Getter
+@NoArgsConstructor
 @Entity
 public class BenefitCondition {
 

@@ -1,8 +1,12 @@
 package com.taehyun.youthpolicyplatform.user.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 // 정책 판별에 공통적으로 사용되는 사용자 기본 조건 정보
+@Getter
+@NoArgsConstructor
 @Entity
 public class UserProfile {
 

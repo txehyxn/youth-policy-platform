@@ -1,10 +1,15 @@
 package com.taehyun.youthpolicyplatform.benefit.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
 
 // 청년 정책 및 혜택의 기본 정보를 저장하는 엔티티
+@Getter
+@NoArgsConstructor
 @Entity
 public class Benefit {
 
@@ -25,12 +30,12 @@ public class Benefit {
     // 신청 링크
     private String applicationUrl;
 
-    // 정책에 연결된 신청 조건 목록
-    @OneToMany(mappedBy = "benefit")
-    private List<BenefitCondition> conditions = new ArrayList<>();
-
     // 정책이 속한 카테고리
     @ManyToOne
     @JoinColumn(name = "category_id")
     private BenefitCategory category;
+
+    // 정책에 연결된 신청 조건 목록
+    @OneToMany(mappedBy = "benefit")
+    private List<BenefitCondition> conditions = new ArrayList<>();
 }
