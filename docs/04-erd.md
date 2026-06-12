@@ -14,14 +14,14 @@
 
 회원 계정 정보
 
-| 컬럼명        | 설명                           |
-| ---------- | ---------------------------- |
-| id         | 회원 PK                        |
-| email      | 이메일                          |
-| password   | 비밀번호                         |
-| role       | USER / ADMIN / SUPER_ADMIN   |
-| created_at | 생성일, 추후 BaseTimeEntity 적용 예정 |
-| updated_at | 수정일, 추후 BaseTimeEntity 적용 예정 |
+| 컬럼명        | 설명                         |
+| ---------- | -------------------------- |
+| id         | 회원 PK                      |
+| email      | 이메일                        |
+| password   | 비밀번호                       |
+| role       | USER / ADMIN / SUPER_ADMIN |
+| created_at | 생성일, BaseTimeEntity 적용     |
+| updated_at | 수정일, BaseTimeEntity 적용     |
 
 ### role 설계
 
@@ -97,16 +97,16 @@ users 1 : 1 user_profiles
 
 정책 기본 정보
 
-| 컬럼명             | 설명                           |
-| --------------- | ---------------------------- |
-| id              | PK                           |
-| title           | 정책명                          |
-| description     | 정책 설명                        |
-| support_amount  | 지원 내용                        |
-| application_url | 신청 링크                        |
-| category_id     | 카테고리 FK                      |
-| created_at      | 생성일, 추후 BaseTimeEntity 적용 예정 |
-| updated_at      | 수정일, 추후 BaseTimeEntity 적용 예정 |
+| 컬럼명             | 설명                     |
+| --------------- | ---------------------- |
+| id              | PK                     |
+| title           | 정책명                    |
+| description     | 정책 설명                  |
+| support_amount  | 지원 내용                  |
+| application_url | 신청 링크                  |
+| category_id     | 카테고리 FK                |
+| created_at      | 생성일, BaseTimeEntity 적용 |
+| updated_at      | 수정일, BaseTimeEntity 적용 |
 
 ### benefit_categories - benefits 관계
 
@@ -189,6 +189,18 @@ benefits 1 : N benefit_conditions
 | start_date | 시작일   |
 | end_date   | 종료일   |
 
+### benefits - benefit_schedules 관계
+
+```text
+benefits 1 : N benefit_schedules
+```
+
+설계 이유:
+
+* 하나의 정책이 여러 신청 기간을 가질 수 있음
+* 정책 신청 시작일과 종료일을 캘린더에 표시하기 위함
+* 사용자가 관심 등록한 정책의 일정만 개인 캘린더에서 확인할 수 있도록 확장 가능
+
 ---
 
 ## benefit_documents
@@ -206,6 +218,18 @@ benefits 1 : N benefit_conditions
 * 주민등록등본
 * 소득증빙서류
 * 재직증명서
+
+### benefits - benefit_documents 관계
+
+```text
+benefits 1 : N benefit_documents
+```
+
+설계 이유:
+
+* 하나의 정책은 여러 필요 서류를 가질 수 있음
+* 정책 상세 페이지에서 신청 전 준비해야 할 서류를 안내하기 위함
+* 관리자 페이지에서 정책별 필요 서류를 추가하거나 수정할 수 있도록 설계
 
 ---
 
@@ -244,6 +268,6 @@ benefits 1 : N benefit_conditions
 
 또한 사용자 정보는 `users`와 `user_profiles`로 분리하여 인증 정보와 정책 판별 정보를 독립적으로 관리하도록 설계하였다.
 
-정책 정보는 `benefit_categories`, `benefits`, `benefit_conditions`로 분리하여 카테고리 분류, 정책 기본 정보, 정책 조건을 각각 독립적으로 관리한다.
+정책 정보는 `benefit_categories`, `benefits`, `benefit_conditions`, `benefit_schedules`, `benefit_documents`로 분리하여 카테고리 분류, 정책 기본 정보, 정책 조건, 신청 일정, 필요 서류를 각각 독립적으로 관리한다.
 
 이는 본 프로젝트의 핵심 설계 철학인 Data Driven Eligibility Engine 구현을 위한 구조이다.
