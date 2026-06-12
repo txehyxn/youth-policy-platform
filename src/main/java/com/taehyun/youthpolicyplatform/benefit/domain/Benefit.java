@@ -39,4 +39,12 @@ public class Benefit extends BaseTimeEntity {
     // 정책에 연결된 신청 조건 목록
     @OneToMany(mappedBy = "benefit")
     private List<BenefitCondition> conditions = new ArrayList<>();
+
+    // 정책 신청 일정 목록
+    @OneToMany(mappedBy = "benefit")
+    private List<BenefitSchedule> schedules = new ArrayList<>();
+
+    // 정책 신청에 필요한 서류 목록
+    @OneToMany(mappedBy = "benefit")
+    private List<BenefitDocument> documents = new ArrayList<>();
 }
