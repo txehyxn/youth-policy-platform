@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.user.domain;
 
+import com.taehyun.youthpolicyplatform.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @Entity
-public class User {
+public class User extends BaseTimeEntity {
 
     // 회원 고유 번호(PK)
     @Id

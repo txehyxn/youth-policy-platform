@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.benefit.domain;
 
+import com.taehyun.youthpolicyplatform.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Entity
-public class Benefit {
+public class Benefit extends BaseTimeEntity {
 
     // 정책 고유 번호(PK)
     @Id
