@@ -1,4 +1,14 @@
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+  datasource:
+    url: jdbc:mysql://localhost:3306/youth_policy_platform?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: dkdlemf0502.
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
