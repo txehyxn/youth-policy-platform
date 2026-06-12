@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.benefit.domain;
 
+import com.taehyun.youthpolicyplatform.bookmark.domain.Bookmark;
 import com.taehyun.youthpolicyplatform.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -47,4 +48,8 @@ public class Benefit extends BaseTimeEntity {
     // 정책 신청에 필요한 서류 목록
     @OneToMany(mappedBy = "benefit")
     private List<BenefitDocument> documents = new ArrayList<>();
+
+    // 이 정책을 저장한 사용자 목록
+    @OneToMany(mappedBy = "benefit")
+    private List<Bookmark> bookmarks = new ArrayList<>();
 }

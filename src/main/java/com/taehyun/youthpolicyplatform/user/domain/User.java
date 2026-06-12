@@ -1,9 +1,13 @@
 package com.taehyun.youthpolicyplatform.user.domain;
 
+import com.taehyun.youthpolicyplatform.bookmark.domain.Bookmark;
 import com.taehyun.youthpolicyplatform.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // 회원 정보를 저장하는 엔티티
 @Getter
@@ -29,4 +33,8 @@ public class User extends BaseTimeEntity {
     // 회원의 정책 판별용 프로필 정보
     @OneToOne(mappedBy = "user")
     private UserProfile userProfile;
+
+    // 사용자가 저장한 관심 정책 목록
+    @OneToMany(mappedBy = "user")
+    private List<Bookmark> bookmarks = new ArrayList<>();
 }
