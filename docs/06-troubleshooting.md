@@ -246,3 +246,161 @@ git commit -m "merge: GitHub 원격 저장소 병합"
 ### 결과
 
 로컬 프로젝트와 GitHub 저장소가 정상적으로 병합되었고 Push에 성공하였다.
+
+# Trouble Shooting #3 - MySQL Server 초기화 실패
+
+## 발생 일시
+
+2026-06-13
+
+---
+
+## 문제 상황
+
+Spring Boot 프로젝트에 MySQL을 연결하기 위해 MySQL Community Server를 설치하였다.
+
+설치 과정 중 `Apply Configuration` 단계에서 아래 항목이 실패하였다.
+
+```text
+Initializing database (may take a long time)
+```
+
+MySQL Installer 로그에는 다음과 같은 메시지가 출력되었다.
+
+```text
+Attempting to run MySQL Server with --initialize-insecure option...
+Starting process for MySQL Server 8.0.46...
+Failed to start process for MySQL Server 8.0.46.
+Database initialization failed.
+```
+
+---
+
+## 원인 분석
+
+처음에는 비밀번호 설정 문제로 예상하였으나 로그를 분석한 결과 MySQL 서비스(MySQL80)는 등록되어 있었지만 실제 실행 파일(`mysqld.exe`)이 정상적으로 동작하지 않는 상태였다.
+
+서비스 상태 확인:
+
+```cmd
+sc query MySQL80
+```
+
+서비스 설정 확인:
+
+```cmd
+sc qc MySQL80
+```
+
+결과:
+
+```text
+BINARY_PATH_NAME :
+"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqld.exe"
+```
+
+기존 설치 과정이 비정상 종료되면서 서비스 정보만 남아 있는 상태였다.
+
+---
+
+## 해결 과정
+
+### 1. 기존 MySQL 서비스 삭제
+
+```cmd
+sc delete MySQL80
+```
+
+추가적으로 남아 있는 서비스 레지스트리 제거
+
+```cmd
+reg delete "HKLM\SYSTEM\CurrentControlSet\Services\MySQL80" /f
+```
+
+재부팅 후 서비스 제거 여부 확인
+
+```cmd
+sc query MySQL80
+```
+
+결과:
+
+```text
+[SC] OpenService 실패 1060
+지정된 서비스가 설치된 서비스로 존재하지 않습니다.
+```
+
+---
+
+### 2. MySQL 제품 제거
+
+MySQL Installer에서 기존 항목 제거
+
+* MySQL Server
+* MySQL Workbench
+* MySQL Shell
+* MySQL Router
+* Samples and Examples
+
+---
+
+### 3. MySQL 재설치
+
+MySQL Installer를 통해 다시 설치 진행
+
+설치 완료 후 서비스 상태 확인
+
+```cmd
+sc query MySQL80
+```
+
+결과:
+
+```text
+STATE : 4 RUNNING
+```
+
+---
+
+### 4. MySQL 접속 확인
+
+```cmd
+"C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p
+```
+
+접속 성공 확인
+
+---
+
+### 5. 데이터베이스 생성
+
+```sql
+CREATE DATABASE youth_policy_platform
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+```
+
+---
+
+## 결과
+
+Spring Boot와 MySQL 연동에 성공하였다.
+
+Hibernate가 엔티티를 기반으로 아래 테이블을 자동 생성하였다.
+
+* user
+* user_profile
+* benefit
+* benefit_category
+* benefit_condition
+* benefit_document
+* benefit_schedule
+* bookmark
+
+---
+
+## 배운 점
+
+설치 오류 발생 시 단순 재설치보다 로그를 먼저 확인해야 한다.
+
+Windows 서비스와 레지스트리에 이전 설치 정보가 남아 있으면 MySQL 초기화가 실패할 수 있으며, 서비스 삭제 후 재설치가 가장 확실한 해결 방법임을 확인하였다.
