@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정책 관리</title>
+</head>
+<body>
+
+<h1>정책 관리</h1>
+
+<hr>
+
+<h3>정책 등록</h3>
+
+<form action="/admin/benefits" method="post">
+
+    <p>
+        정책명
+        <input type="text" name="title">
+    </p>
+
+    <p>
+        정책 설명
+        <input type="text" name="description">
+    </p>
+
+    <p>
+        지원 내용
+        <input type="text" name="supportAmount">
+    </p>
+
+    <p>
+        신청 링크
+        <input type="text" name="applicationUrl">
+    </p>
+
+    <p>
+        카테고리
+
+        <select name="categoryId">
+
+            <option
+                    th:each="category : ${categories}"
+                    th:value="${category.id}"
+                    th:text="${category.name}">
+            </option>
+
+        </select>
+
+    </p>
+
+    <button type="submit">
+        등록
+    </button>
+
+</form>
+
+<hr>
+
+<h3>등록된 정책</h3>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>정책명</th>
+        <th>카테고리</th>
+    </tr>
+
+    <tr th:each="benefit : ${benefits}">
+        <td th:text="${benefit.id}"></td>
+        <td th:text="${benefit.title}"></td>
+        <td th:text="${benefit.category.name}"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>

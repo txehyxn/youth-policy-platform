@@ -52,4 +52,19 @@ public class Benefit extends BaseTimeEntity {
     // 이 정책을 저장한 사용자 목록
     @OneToMany(mappedBy = "benefit")
     private List<Bookmark> bookmarks = new ArrayList<>();
+
+    // 정책 생성자
+    public Benefit(
+            String title,
+            String description,
+            String supportAmount,
+            String applicationUrl,
+            BenefitCategory category
+    ) {
+        this.title = title;
+        this.description = description;
+        this.supportAmount = supportAmount;
+        this.applicationUrl = applicationUrl;
+        this.category = category;
+    }
 }

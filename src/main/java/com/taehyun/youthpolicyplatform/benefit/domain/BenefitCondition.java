@@ -31,4 +31,19 @@ public class BenefitCondition {
     @ManyToOne
     @JoinColumn(name = "benefit_id")
     private Benefit benefit;
+
+    // 조건 생성자
+    public BenefitCondition(
+            String fieldName,
+            String operator,
+            String value,
+            Boolean required,
+            Benefit benefit
+    ) {
+        this.fieldName = fieldName;
+        this.operator = operator;
+        this.value = value;
+        this.required = required;
+        this.benefit = benefit;
+    }
 }
