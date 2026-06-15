@@ -24,4 +24,9 @@ public class BenefitCategory {
     // 카테고리에 속한 정책 목록
     @OneToMany(mappedBy = "category")
     private List<Benefit> benefits = new ArrayList<>();
+
+    // 카테고리 생성 시 이름을 필수로 받는다
+    public BenefitCategory(String name) {
+        this.name = name;
+    }
 }

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카테고리 관리</title>
+</head>
+<body>
+
+<h1>카테고리 관리</h1>
+
+<hr>
+
+<h3>카테고리 등록</h3>
+
+<form action="/admin/categories" method="post">
+    <input type="text" name="name" placeholder="카테고리명 입력">
+    <button type="submit">등록</button>
+</form>
+
+<hr>
+
+<h3>등록된 카테고리</h3>
+
+<ul>
+    <li th:each="category : ${categories}">
+        <span th:text="${category.name}"></span>
+    </li>
+</ul>
+
+</body>
+</html>
