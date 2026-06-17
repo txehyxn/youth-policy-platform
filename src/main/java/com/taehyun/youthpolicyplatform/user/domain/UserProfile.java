@@ -46,4 +46,29 @@ public class UserProfile {
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    // 사용자 프로필 생성자
+    public UserProfile(
+            Integer age,
+            String region,
+            Integer householdSize,
+            Integer monthlyIncome,
+            Integer annualIncome,
+            Integer middleIncomePercent,
+            Boolean employed,
+            Boolean student,
+            Boolean houseOwner,
+            User user
+    ) {
+        this.age = age;
+        this.region = region;
+        this.householdSize = householdSize;
+        this.monthlyIncome = monthlyIncome;
+        this.annualIncome = annualIncome;
+        this.middleIncomePercent = middleIncomePercent;
+        this.employed = employed;
+        this.student = student;
+        this.houseOwner = houseOwner;
+        this.user = user;
+    }
 }

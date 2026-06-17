@@ -37,4 +37,11 @@ public class User extends BaseTimeEntity {
     // 사용자가 저장한 관심 정책 목록
     @OneToMany(mappedBy = "user")
     private List<Bookmark> bookmarks = new ArrayList<>();
+
+    // 사용자 생성자
+    public User(String email, String password, Role role) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 }

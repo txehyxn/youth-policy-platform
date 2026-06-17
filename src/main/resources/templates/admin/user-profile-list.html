@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>사용자 프로필 관리</title>
+</head>
+<body>
+
+<h1>사용자 프로필 관리</h1>
+
+<hr>
+
+<h3>프로필 등록</h3>
+
+<form action="/admin/user-profiles" method="post">
+
+    <p>
+        사용자 ID
+        <input type="number" name="userId">
+    </p>
+
+    <p>
+        나이
+        <input type="number" name="age">
+    </p>
+
+    <p>
+        지역
+        <input type="text" name="region">
+    </p>
+
+    <p>
+        가구원 수
+        <input type="number" name="householdSize">
+    </p>
+
+    <p>
+        월소득
+        <input type="number" name="monthlyIncome">
+    </p>
+
+    <p>
+        연소득
+        <input type="number" name="annualIncome">
+    </p>
+
+    <p>
+        중위소득 비율
+        <input type="number" name="middleIncomePercent">
+    </p>
+
+    <p>
+        취업 여부
+        <select name="employed">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+    </p>
+
+    <p>
+        학생 여부
+        <select name="student">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+    </p>
+
+    <p>
+        무주택 여부
+        <select name="houseOwner">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+    </p>
+
+    <button type="submit">등록</button>
+
+</form>
+
+<hr>
+
+<h3>등록된 프로필</h3>
+
+<table border="1">
+
+    <tr>
+        <th>ID</th>
+        <th>나이</th>
+        <th>지역</th>
+        <th>중위소득%</th>
+        <th>무주택</th>
+    </tr>
+
+    <tr th:each="profile : ${profiles}">
+        <td th:text="${profile.id}"></td>
+        <td th:text="${profile.age}"></td>
+        <td th:text="${profile.region}"></td>
+        <td th:text="${profile.middleIncomePercent}"></td>
+        <td th:text="${profile.houseOwner}"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>     
