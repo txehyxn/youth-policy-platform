@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>판별 결과</title>
+</head>
+<body>
+
+<h1>신청 가능 여부 결과</h1>
+
+<h2 th:if="${result}">
+    신청 가능합니다.
+</h2>
+
+<h2 th:unless="${result}">
+    신청 불가능합니다.
+</h2>
+
+</body>
+</html>
