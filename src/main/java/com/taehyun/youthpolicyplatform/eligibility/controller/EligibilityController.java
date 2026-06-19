@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.eligibility.controller;
 
+import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.service.EligibilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -20,7 +21,7 @@ public class EligibilityController {
             Model model
     ) {
 
-        boolean result =
+        EligibilityResultDto result =
                 eligibilityService.check(benefitId, profileId);
 
         model.addAttribute("result", result);

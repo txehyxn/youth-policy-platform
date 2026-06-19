@@ -3,10 +3,15 @@ package com.taehyun.youthpolicyplatform.eligibility.service;
 import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
 import com.taehyun.youthpolicyplatform.benefit.domain.BenefitCondition;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
+import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityConditionResultDto;
+import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -15,7 +20,7 @@ public class EligibilityService {
     private final BenefitRepository benefitRepository;
     private final UserProfileRepository userProfileRepository;
 
-    public boolean check(Long benefitId, Long profileId) {
+    public EligibilityResultDto check(Long benefitId, Long profileId) {
 
         Benefit benefit = benefitRepository.findById(benefitId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
@@ -23,16 +28,33 @@ public class EligibilityService {
         UserProfile profile = userProfileRepository.findById(profileId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프로필입니다."));
 
+        List<EligibilityConditionResultDto> conditionResults = new ArrayList<>();
+
+        boolean eligible = true;
+
         for (BenefitCondition condition : benefit.getConditions()) {
 
             boolean passed = checkCondition(profile, condition);
 
             if (!passed) {
-                return false;
+                eligible = false;
             }
+
+            conditionResults.add(
+                    new EligibilityConditionResultDto(
+                            condition.getFieldName(),
+                            condition.getOperator(),
+                            condition.getValue(),
+                            passed
+                    )
+            );
         }
 
-        return true;
+        return new EligibilityResultDto(
+                benefit.getTitle(),
+                eligible,
+                conditionResults
+        );
     }
 
     private boolean checkCondition(UserProfile profile, BenefitCondition condition) {

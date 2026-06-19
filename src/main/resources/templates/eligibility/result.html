@@ -8,13 +8,40 @@
 
 <h1>신청 가능 여부 결과</h1>
 
-<h2 th:if="${result}">
-    신청 가능합니다.
+<h2 th:text="${result.benefitTitle}"></h2>
+
+<hr>
+
+<h2 th:if="${result.eligible}">
+    최종 결과: 신청 가능합니다.
 </h2>
 
-<h2 th:unless="${result}">
-    신청 불가능합니다.
+<h2 th:unless="${result.eligible}">
+    최종 결과: 신청 불가능합니다.
 </h2>
+
+<hr>
+
+<h3>조건별 판별 결과</h3>
+
+<table border="1">
+    <tr>
+        <th>필드명</th>
+        <th>연산자</th>
+        <th>기준값</th>
+        <th>결과</th>
+    </tr>
+
+    <tr th:each="condition : ${result.conditionResults}">
+        <td th:text="${condition.fieldName}"></td>
+        <td th:text="${condition.operator}"></td>
+        <td th:text="${condition.value}"></td>
+        <td>
+            <span th:if="${condition.passed}">통과</span>
+            <span th:unless="${condition.passed}">실패</span>
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>
