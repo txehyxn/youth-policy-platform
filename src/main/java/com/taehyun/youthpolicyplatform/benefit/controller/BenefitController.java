@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,5 +34,19 @@ public class BenefitController {
         benefitService.save(title, description, supportAmount, applicationUrl, categoryId);
 
         return "redirect:/admin/benefits";
+    }
+
+    @GetMapping("/admin/benefits/{id}")
+    public String detail(
+            @PathVariable Long id,
+            Model model
+    ) {
+
+        model.addAttribute(
+                "benefit",
+                benefitService.findById(id)
+        );
+
+        return "admin/benefit-detail";
     }
 }

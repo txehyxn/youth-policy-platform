@@ -43,4 +43,10 @@ public class BenefitService {
     public List<Benefit> findAll() {
         return benefitRepository.findAll();
     }
+
+    // 정책 단건 조회
+    public Benefit findById(Long id) {
+        return benefitRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
+    }
 }

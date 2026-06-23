@@ -69,7 +69,13 @@
 
     <tr th:each="benefit : ${benefits}">
         <td th:text="${benefit.id}"></td>
-        <td th:text="${benefit.title}"></td>
+
+        <td>
+            <a th:href="@{/admin/benefits/{id}(id=${benefit.id})}"
+               th:text="${benefit.title}">
+            </a>
+        </td>
+
         <td th:text="${benefit.category.name}"></td>
     </tr>
 
