@@ -69,6 +69,7 @@
         <th>연산자</th>
         <th>값</th>
         <th>필수</th>
+        <th>삭제</th>
     </tr>
 
     <tr th:each="condition : ${conditions}">
@@ -78,6 +79,17 @@
         <td th:text="${condition.operator}"></td>
         <td th:text="${condition.value}"></td>
         <td th:text="${condition.required}"></td>
+
+        <td>
+            <form th:action="@{/admin/conditions/delete/{id}(id=${condition.id})}"
+                  method="post">
+
+                <button type="submit">
+                    삭제
+                </button>
+
+            </form>
+        </td>
     </tr>
 
 </table>

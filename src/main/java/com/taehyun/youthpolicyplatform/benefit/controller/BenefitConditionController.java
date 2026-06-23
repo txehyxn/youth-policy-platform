@@ -40,4 +40,12 @@ public class BenefitConditionController {
 
         return "redirect:/admin/conditions";
     }
+
+    @PostMapping("/admin/conditions/delete/{id}")
+    public String deleteCondition(@PathVariable Long id) {
+
+        benefitConditionService.delete(id);
+
+        return "redirect:/admin/conditions";
+    }
 }

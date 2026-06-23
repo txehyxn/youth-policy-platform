@@ -43,4 +43,9 @@ public class BenefitConditionService {
     public List<BenefitCondition> findAll() {
         return benefitConditionRepository.findAll();
     }
+
+    // 정책 조건 삭제
+    public void delete(Long id) {
+        benefitConditionRepository.deleteById(id);
+    }
 }
