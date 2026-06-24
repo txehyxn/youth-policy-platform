@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -29,6 +30,14 @@ public class BenefitCategoryController {
     public String saveCategory(@RequestParam String name) {
 
         benefitCategoryService.save(name);
+
+        return "redirect:/admin/categories";
+    }
+
+    @PostMapping("/admin/categories/delete/{id}")
+    public String deleteCategory(@PathVariable Long id) {
+
+        benefitCategoryService.delete(id);
 
         return "redirect:/admin/categories";
     }

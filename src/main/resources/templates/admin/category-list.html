@@ -21,11 +21,24 @@
 
 <h3>등록된 카테고리</h3>
 
-<ul>
-    <li th:each="category : ${categories}">
-        <span th:text="${category.name}"></span>
-    </li>
-</ul>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>카테고리명</th>
+        <th>삭제</th>
+    </tr>
+
+    <tr th:each="category : ${categories}">
+        <td th:text="${category.id}"></td>
+        <td th:text="${category.name}"></td>
+        <td>
+            <form th:action="@{/admin/categories/delete/{id}(id=${category.id})}"
+                  method="post">
+                <button type="submit">삭제</button>
+            </form>
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>

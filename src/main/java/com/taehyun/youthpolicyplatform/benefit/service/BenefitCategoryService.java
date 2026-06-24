@@ -23,4 +23,9 @@ public class BenefitCategoryService {
     public List<BenefitCategory> findAll() {
         return benefitCategoryRepository.findAll();
     }
+
+    // 카테고리 삭제
+    public void delete(Long id) {
+        benefitCategoryRepository.deleteById(id);
+    }
 }
