@@ -57,4 +57,36 @@ public class BenefitController {
 
         return "redirect:/admin/benefits";
     }
+
+    @GetMapping("/admin/benefits/{id}/edit")
+    public String editForm(
+            @PathVariable Long id,
+            Model model
+    ) {
+        model.addAttribute("benefit", benefitService.findById(id));
+        model.addAttribute("categories", benefitCategoryService.findAll());
+
+        return "admin/benefit-edit";
+    }
+
+    @PostMapping("/admin/benefits/{id}/edit")
+    public String updateBenefit(
+            @PathVariable Long id,
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam String supportAmount,
+            @RequestParam String applicationUrl,
+            @RequestParam Long categoryId
+    ) {
+        benefitService.update(
+                id,
+                title,
+                description,
+                supportAmount,
+                applicationUrl,
+                categoryId
+        );
+
+        return "redirect:/admin/benefits/" + id;
+    }
 }

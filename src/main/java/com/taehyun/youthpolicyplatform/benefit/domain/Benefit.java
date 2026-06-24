@@ -67,4 +67,19 @@ public class Benefit extends BaseTimeEntity {
         this.applicationUrl = applicationUrl;
         this.category = category;
     }
+
+    // 정책 기본 정보 수정
+    public void update(
+            String title,
+            String description,
+            String supportAmount,
+            String applicationUrl,
+            BenefitCategory category
+    ) {
+        this.title = title;
+        this.description = description;
+        this.supportAmount = supportAmount;
+        this.applicationUrl = applicationUrl;
+        this.category = category;
+    }
 }

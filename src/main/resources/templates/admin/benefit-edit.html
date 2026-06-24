@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정책 수정</title>
+</head>
+<body>
+
+<h1>정책 수정</h1>
+
+<hr>
+
+<form th:action="@{/admin/benefits/{id}/edit(id=${benefit.id})}"
+      method="post">
+
+    <p>
+        정책명
+        <input type="text"
+               name="title"
+               th:value="${benefit.title}">
+    </p>
+
+    <p>
+        정책 설명
+        <input type="text"
+               name="description"
+               th:value="${benefit.description}">
+    </p>
+
+    <p>
+        지원 내용
+        <input type="text"
+               name="supportAmount"
+               th:value="${benefit.supportAmount}">
+    </p>
+
+    <p>
+        신청 링크
+        <input type="text"
+               name="applicationUrl"
+               th:value="${benefit.applicationUrl}">
+    </p>
+
+    <p>
+        카테고리
+
+        <select name="categoryId">
+
+            <option
+                    th:each="category : ${categories}"
+                    th:value="${category.id}"
+                    th:text="${category.name}"
+                    th:selected="${category.id == benefit.category.id}">
+            </option>
+
+        </select>
+
+    </p>
+
+    <button type="submit">
+        수정
+    </button>
+
+</form>
+
+<hr>
+
+<a th:href="@{/admin/benefits/{id}(id=${benefit.id})}">
+    상세 페이지로 돌아가기
+</a>
+
+</body>
+</html>

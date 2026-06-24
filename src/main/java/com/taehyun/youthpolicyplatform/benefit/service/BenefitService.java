@@ -54,4 +54,30 @@ public class BenefitService {
     public void delete(Long id) {
         benefitRepository.deleteById(id);
     }
+
+    // 정책 수정
+    public Benefit update(
+            Long id,
+            String title,
+            String description,
+            String supportAmount,
+            String applicationUrl,
+            Long categoryId
+    ) {
+        Benefit benefit = benefitRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
+
+        BenefitCategory category = benefitCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        benefit.update(
+                title,
+                description,
+                supportAmount,
+                applicationUrl,
+                category
+        );
+
+        return benefitRepository.save(benefit);
+    }
 }
