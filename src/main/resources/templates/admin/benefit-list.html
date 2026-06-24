@@ -65,6 +65,7 @@
         <th>ID</th>
         <th>정책명</th>
         <th>카테고리</th>
+        <th>삭제</th>
     </tr>
 
     <tr th:each="benefit : ${benefits}">
@@ -77,6 +78,17 @@
         </td>
 
         <td th:text="${benefit.category.name}"></td>
+
+        <td>
+            <form th:action="@{/admin/benefits/delete/{id}(id=${benefit.id})}"
+                  method="post">
+
+                <button type="submit">
+                    삭제
+                </button>
+
+            </form>
+        </td>
     </tr>
 
 </table>

@@ -49,4 +49,9 @@ public class BenefitService {
         return benefitRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
     }
+
+    // 정책 삭제
+    public void delete(Long id) {
+        benefitRepository.deleteById(id);
+    }
 }

@@ -49,4 +49,12 @@ public class BenefitController {
 
         return "admin/benefit-detail";
     }
+
+    @PostMapping("/admin/benefits/delete/{id}")
+    public String deleteBenefit(@PathVariable Long id) {
+
+        benefitService.delete(id);
+
+        return "redirect:/admin/benefits";
+    }
 }
