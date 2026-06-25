@@ -49,6 +49,48 @@
 
 <hr>
 
+<h3>조건 추가</h3>
+
+<form th:action="@{/admin/benefits/{id}/conditions(id=${benefit.id})}"
+      method="post">
+
+    <p>
+        필드명
+        <input type="text"
+               name="fieldName"
+               placeholder="age">
+    </p>
+
+    <p>
+        연산자
+        <input type="text"
+               name="operator"
+               placeholder=">=">
+    </p>
+
+    <p>
+        기준값
+        <input type="text"
+               name="value"
+               placeholder="19">
+    </p>
+
+    <p>
+        필수 여부
+        <select name="required">
+            <option value="true">true</option>
+            <option value="false">false</option>
+        </select>
+    </p>
+
+    <button type="submit">
+        조건 등록
+    </button>
+
+</form>
+
+<hr>
+
 <h3>정책 조건</h3>
 
 <table border="1">
@@ -57,6 +99,7 @@
         <th>연산자</th>
         <th>기준값</th>
         <th>필수 여부</th>
+        <th>삭제</th>
     </tr>
 
     <tr th:each="condition : ${benefit.conditions}">
@@ -64,6 +107,12 @@
         <td th:text="${condition.operator}"></td>
         <td th:text="${condition.value}"></td>
         <td th:text="${condition.required}"></td>
+        <td>
+            <form th:action="@{/admin/benefits/{benefitId}/conditions/delete/{conditionId}(benefitId=${benefit.id}, conditionId=${condition.id})}"
+                  method="post">
+                <button type="submit">삭제</button>
+            </form>
+        </td>
     </tr>
 </table>
 

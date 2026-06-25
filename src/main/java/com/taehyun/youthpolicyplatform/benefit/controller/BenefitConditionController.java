@@ -1,51 +1,80 @@
-package com.taehyun.youthpolicyplatform.benefit.controller;
+    package com.taehyun.youthpolicyplatform.benefit.controller;
 
-import com.taehyun.youthpolicyplatform.benefit.service.BenefitConditionService;
-import com.taehyun.youthpolicyplatform.benefit.service.BenefitService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+    import com.taehyun.youthpolicyplatform.benefit.service.BenefitConditionService;
+    import com.taehyun.youthpolicyplatform.benefit.service.BenefitService;
+    import lombok.RequiredArgsConstructor;
+    import org.springframework.stereotype.Controller;
+    import org.springframework.ui.Model;
+    import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequiredArgsConstructor
-public class BenefitConditionController {
+    @Controller
+    @RequiredArgsConstructor
+    public class BenefitConditionController {
 
-    private final BenefitConditionService benefitConditionService;
-    private final BenefitService benefitService;
+        private final BenefitConditionService benefitConditionService;
+        private final BenefitService benefitService;
 
-    @GetMapping("/admin/conditions")
-    public String conditionList(Model model) {
-        model.addAttribute("conditions", benefitConditionService.findAll());
-        model.addAttribute("benefits", benefitService.findAll());
+        @GetMapping("/admin/conditions")
+        public String conditionList(Model model) {
+            model.addAttribute("conditions", benefitConditionService.findAll());
+            model.addAttribute("benefits", benefitService.findAll());
 
-        return "admin/condition-list";
+            return "admin/condition-list";
+        }
+
+        @PostMapping("/admin/conditions")
+        public String saveCondition(
+                @RequestParam Long benefitId,
+                @RequestParam String fieldName,
+                @RequestParam String operator,
+                @RequestParam String value,
+                @RequestParam Boolean required
+        ) {
+            benefitConditionService.save(
+                    benefitId,
+                    fieldName,
+                    operator,
+                    value,
+                    required
+            );
+
+            return "redirect:/admin/conditions";
+        }
+
+        @PostMapping("/admin/conditions/delete/{id}")
+        public String deleteCondition(@PathVariable Long id) {
+
+            benefitConditionService.delete(id);
+
+            return "redirect:/admin/conditions";
+        }
+
+        @PostMapping("/admin/benefits/{benefitId}/conditions")
+        public String saveConditionFromBenefitDetail(
+                @PathVariable Long benefitId,
+                @RequestParam String fieldName,
+                @RequestParam String operator,
+                @RequestParam String value,
+                @RequestParam Boolean required
+        ) {
+            benefitConditionService.save(
+                    benefitId,
+                    fieldName,
+                    operator,
+                    value,
+                    required
+            );
+
+            return "redirect:/admin/benefits/" + benefitId;
+        }
+
+        @PostMapping("/admin/benefits/{benefitId}/conditions/delete/{conditionId}")
+        public String deleteConditionFromBenefitDetail(
+                @PathVariable Long benefitId,
+                @PathVariable Long conditionId
+        ) {
+            benefitConditionService.delete(conditionId);
+
+            return "redirect:/admin/benefits/" + benefitId;
+        }
     }
-
-    @PostMapping("/admin/conditions")
-    public String saveCondition(
-            @RequestParam Long benefitId,
-            @RequestParam String fieldName,
-            @RequestParam String operator,
-            @RequestParam String value,
-            @RequestParam Boolean required
-    ) {
-        benefitConditionService.save(
-                benefitId,
-                fieldName,
-                operator,
-                value,
-                required
-        );
-
-        return "redirect:/admin/conditions";
-    }
-
-    @PostMapping("/admin/conditions/delete/{id}")
-    public String deleteCondition(@PathVariable Long id) {
-
-        benefitConditionService.delete(id);
-
-        return "redirect:/admin/conditions";
-    }
-}
