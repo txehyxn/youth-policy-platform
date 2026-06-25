@@ -25,22 +25,33 @@
 <h3>조건별 판별 결과</h3>
 
 <table border="1">
+
     <tr>
         <th>필드명</th>
         <th>연산자</th>
         <th>기준값</th>
         <th>결과</th>
+        <th>안내 메시지</th>
     </tr>
 
     <tr th:each="condition : ${result.conditionResults}">
         <td th:text="${condition.fieldName}"></td>
         <td th:text="${condition.operator}"></td>
         <td th:text="${condition.value}"></td>
+
         <td>
-            <span th:if="${condition.passed}">통과</span>
-            <span th:unless="${condition.passed}">실패</span>
+            <span th:if="${condition.passed}">
+                통과
+            </span>
+
+            <span th:unless="${condition.passed}">
+                실패
+            </span>
         </td>
+
+        <td th:text="${condition.message}"></td>
     </tr>
+
 </table>
 
 </body>

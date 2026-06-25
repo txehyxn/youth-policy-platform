@@ -11,4 +11,7 @@ public class EligibilityConditionResultDto {
     private String operator;
     private String value;
     private boolean passed;
+
+    // 조건별 판별 메시지
+    private String message;
 }

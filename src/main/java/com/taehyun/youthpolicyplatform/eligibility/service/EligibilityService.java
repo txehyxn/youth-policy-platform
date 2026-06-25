@@ -45,7 +45,8 @@ public class EligibilityService {
                             condition.getFieldName(),
                             condition.getOperator(),
                             condition.getValue(),
-                            passed
+                            passed,
+                            createMessage(condition, passed)
                     )
             );
         }
@@ -59,9 +60,9 @@ public class EligibilityService {
 
     private boolean checkCondition(UserProfile profile, BenefitCondition condition) {
 
-        String fieldName = condition.getFieldName();
-        String operator = condition.getOperator();
-        String value = condition.getValue();
+        String fieldName = condition.getFieldName().trim();
+        String operator = condition.getOperator().trim();
+        String value = condition.getValue().trim();
 
         if (fieldName.equals("age")) {
             return compareNumber(profile.getAge(), operator, Integer.parseInt(value));
@@ -76,6 +77,29 @@ public class EligibilityService {
         }
 
         return false;
+    }
+
+    private String createMessage(BenefitCondition condition, boolean passed) {
+
+        String fieldName = condition.getFieldName().trim();
+
+        if (passed) {
+            return "조건을 충족했습니다.";
+        }
+
+        if (fieldName.equals("age")) {
+            return "나이 조건을 충족하지 않습니다.";
+        }
+
+        if (fieldName.equals("middle_income_percent")) {
+            return "중위소득 기준을 충족하지 않습니다.";
+        }
+
+        if (fieldName.equals("house_owner")) {
+            return "주택 소유 여부 조건을 충족하지 않습니다.";
+        }
+
+        return "조건을 충족하지 않습니다.";
     }
 
     private boolean compareNumber(Integer userValue, String operator, Integer conditionValue) {

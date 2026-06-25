@@ -21,7 +21,7 @@
             <option
                     th:each="benefit : ${benefits}"
                     th:value="${benefit.id}"
-                    th:text="${benefit.title}">
+                    th:text="${benefit.id} + ' - ' + ${benefit.title}">
             </option>
         </select>
     </p>
@@ -74,7 +74,9 @@
 
     <tr th:each="condition : ${conditions}">
         <td th:text="${condition.id}"></td>
-        <td th:text="${condition.benefit.title}"></td>
+
+        <td th:text="${condition.benefit.id} + ' - ' + ${condition.benefit.title}"></td>
+
         <td th:text="${condition.fieldName}"></td>
         <td th:text="${condition.operator}"></td>
         <td th:text="${condition.value}"></td>
