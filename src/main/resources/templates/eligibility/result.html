@@ -20,6 +20,19 @@
     최종 결과: 신청 불가능합니다.
 </h2>
 
+<div th:unless="${result.eligible}">
+
+    <h3>신청 불가능 사유</h3>
+
+    <ul>
+        <li th:each="condition : ${result.conditionResults}"
+            th:if="${!condition.passed}"
+            th:text="${condition.message}">
+        </li>
+    </ul>
+
+</div>
+
 <hr>
 
 <h3>조건별 판별 결과</h3>
