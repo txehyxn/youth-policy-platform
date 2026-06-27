@@ -4,6 +4,7 @@ import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
 import com.taehyun.youthpolicyplatform.benefit.dto.ConditionDisplayDto;
 import com.taehyun.youthpolicyplatform.benefit.service.BenefitService;
 import com.taehyun.youthpolicyplatform.benefit.util.ConditionDisplayUtil;
+import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +18,7 @@ import java.util.List;
 public class BenefitUserController {
 
     private final BenefitService benefitService;
+    private final UserProfileService userProfileService;
 
     @GetMapping("/benefits")
     public String benefitList(Model model) {
@@ -42,6 +44,7 @@ public class BenefitUserController {
 
         model.addAttribute("benefit", benefit);
         model.addAttribute("displayConditions", displayConditions);
+        model.addAttribute("profiles", userProfileService.findAll());
 
         return "benefit/detail";
     }
