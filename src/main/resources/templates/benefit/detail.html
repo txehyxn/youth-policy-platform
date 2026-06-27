@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정책 상세</title>
+</head>
+<body>
+
+<h1 th:text="${benefit.title}"></h1>
+
+<hr>
+
+<p>
+    <strong>카테고리:</strong>
+    <span th:text="${benefit.category.name}"></span>
+</p>
+
+<p>
+    <strong>정책 설명:</strong>
+    <span th:text="${benefit.description}"></span>
+</p>
+
+<p>
+    <strong>지원 내용:</strong>
+    <span th:text="${benefit.supportAmount}"></span>
+</p>
+
+<p>
+    <strong>신청 링크:</strong>
+    <a th:href="${benefit.applicationUrl}"
+       th:text="${benefit.applicationUrl}"
+       target="_blank">
+    </a>
+</p>
+
+<hr>
+
+<h3>신청 조건</h3>
+
+<table border="1">
+
+    <tr>
+        <th>조건 항목</th>
+        <th>연산</th>
+        <th>기준</th>
+    </tr>
+
+    <tr th:each="condition : ${displayConditions}">
+
+        <td th:text="${condition.fieldLabel}"></td>
+
+        <td th:text="${condition.operatorLabel}"></td>
+
+        <td th:text="${condition.valueLabel}"></td>
+
+    </tr>
+
+</table>
+
+<hr>
+
+<p>
+    <a th:href="@{/eligibility/check(benefitId=${benefit.id}, profileId=4)}">
+        내 조건으로 신청 가능 여부 확인
+    </a>
+</p>
+
+<hr>
+
+<a href="/benefits">
+    목록으로 돌아가기
+</a>
+
+</body>
+</html>
