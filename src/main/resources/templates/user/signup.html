@@ -8,9 +8,16 @@
 
 <h1>회원가입</h1>
 
+<p th:if="${errorMessage}"
+   th:text="${errorMessage}"
+   style="color: red;">
+</p>
+
 <hr>
 
-<form action="/signup" method="post">
+<form action="/signup"
+      method="post"
+      onsubmit="return validateSignup();">
 
     <p>
         이메일
@@ -23,20 +30,28 @@
     <p>
         비밀번호
         <input type="password"
+               id="password"
                name="password"
                placeholder="비밀번호 입력"
+               oninput="checkPasswordMatch()"
                required>
     </p>
 
     <p>
         비밀번호 확인
         <input type="password"
+               id="passwordConfirm"
                name="passwordConfirm"
                placeholder="비밀번호 다시 입력"
+               oninput="checkPasswordMatch()"
                required>
     </p>
 
-    <button type="submit">
+    <p id="passwordMessage"></p>
+
+    <button type="submit"
+            id="signupButton"
+            disabled>
         회원가입
     </button>
 
@@ -52,6 +67,38 @@
 <p>
     <a href="/">메인으로</a>
 </p>
+
+<script>
+    function checkPasswordMatch() {
+        const password = document.getElementById("password").value;
+        const passwordConfirm = document.getElementById("passwordConfirm").value;
+        const message = document.getElementById("passwordMessage");
+        const signupButton = document.getElementById("signupButton");
+
+        if (passwordConfirm.length === 0) {
+            message.textContent = "";
+            signupButton.disabled = true;
+            return;
+        }
+
+        if (password === passwordConfirm) {
+            message.textContent = "비밀번호가 일치합니다.";
+            message.style.color = "green";
+            signupButton.disabled = false;
+        } else {
+            message.textContent = "비밀번호가 일치하지 않습니다.";
+            message.style.color = "red";
+            signupButton.disabled = true;
+        }
+    }
+
+    function validateSignup() {
+        const password = document.getElementById("password").value;
+        const passwordConfirm = document.getElementById("passwordConfirm").value;
+
+        return password === passwordConfirm;
+    }
+</script>
 
 </body>
 </html>
