@@ -63,25 +63,8 @@
            name="benefitId"
            th:value="${benefit.id}">
 
-    <p>
-        <strong>프로필 선택</strong>
-
-        <select name="profileId">
-
-            <option
-                    th:each="profile : ${profiles}"
-                    th:value="${profile.id}"
-                    th:text="'프로필 ' + ${profile.id}
-                             + ' (' + ${profile.age} + '세 / '
-                             + ${profile.region} + ')'">
-            </option>
-
-        </select>
-
-    </p>
-
     <button type="submit">
-        신청 가능 여부 확인
+        내 프로필로 신청 가능 여부 확인
     </button>
 
 </form>

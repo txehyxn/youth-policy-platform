@@ -2,7 +2,10 @@ package com.taehyun.youthpolicyplatform.eligibility.controller;
 
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.service.EligibilityService;
+import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
+import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,16 +16,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class EligibilityController {
 
     private final EligibilityService eligibilityService;
+    private final UserProfileService userProfileService;
 
     @GetMapping("/eligibility/check")
     public String check(
             @RequestParam Long benefitId,
-            @RequestParam Long profileId,
+            Authentication authentication,
             Model model
     ) {
 
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+
+            return "redirect:/login";
+        }
+
+        UserProfile profile =
+                userProfileService.findByUserEmail(authentication.getName());
+
         EligibilityResultDto result =
-                eligibilityService.check(benefitId, profileId);
+                eligibilityService.check(benefitId, profile.getId());
 
         model.addAttribute("result", result);
 

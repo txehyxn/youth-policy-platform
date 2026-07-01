@@ -57,4 +57,14 @@ public class UserProfileService {
     public List<UserProfile> findAll() {
         return userProfileRepository.findAll();
     }
+
+    // 로그인한 사용자 이메일로 프로필 조회
+    public UserProfile findByUserEmail(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        return userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("프로필이 등록되지 않았습니다."));
+    }
 }
