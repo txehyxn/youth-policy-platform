@@ -39,7 +39,7 @@ public class UserProfile {
     // 학생 여부
     private Boolean student;
 
-    // 무주택 여부
+    // 자가 보유 여부
     private Boolean houseOwner;
 
     // 해당 프로필을 작성한 회원
@@ -70,5 +70,28 @@ public class UserProfile {
         this.student = student;
         this.houseOwner = houseOwner;
         this.user = user;
+    }
+
+    // 사용자 프로필 수정
+    public void update(
+            Integer age,
+            String region,
+            Integer householdSize,
+            Integer monthlyIncome,
+            Integer annualIncome,
+            Integer middleIncomePercent,
+            Boolean employed,
+            Boolean student,
+            Boolean houseOwner
+    ) {
+        this.age = age;
+        this.region = region;
+        this.householdSize = householdSize;
+        this.monthlyIncome = monthlyIncome;
+        this.annualIncome = annualIncome;
+        this.middleIncomePercent = middleIncomePercent;
+        this.employed = employed;
+        this.student = student;
+        this.houseOwner = houseOwner;
     }
 }

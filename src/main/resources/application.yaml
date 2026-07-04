@@ -13,7 +13,6 @@ spring:
       hibernate:
         format_sql: true
 
-
   security:
     user:
       name: admin

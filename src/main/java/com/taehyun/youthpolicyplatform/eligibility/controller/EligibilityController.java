@@ -27,18 +27,25 @@ public class EligibilityController {
 
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
-
             return "redirect:/login";
         }
 
-        UserProfile profile =
-                userProfileService.findByUserEmail(authentication.getName());
+        try {
+            UserProfile profile =
+                    userProfileService.findByUserEmail(authentication.getName());
 
-        EligibilityResultDto result =
-                eligibilityService.check(benefitId, profile.getId());
+            EligibilityResultDto result =
+                    eligibilityService.check(benefitId, profile.getId());
 
-        model.addAttribute("result", result);
+            model.addAttribute("result", result);
 
-        return "eligibility/result";
+            return "eligibility/result";
+
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", "신청 가능 여부를 확인하려면 먼저 내 프로필을 등록해야 합니다.");
+            model.addAttribute("benefitId", benefitId);
+
+            return "eligibility/profile-required";
+        }
     }
 }
