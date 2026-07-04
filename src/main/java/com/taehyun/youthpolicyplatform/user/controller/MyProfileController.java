@@ -63,6 +63,6 @@ public class MyProfileController {
                 houseOwner
         );
 
-        return "redirect:/my/profile";
+        return "redirect:/my/profile?saved=true";
     }
 }

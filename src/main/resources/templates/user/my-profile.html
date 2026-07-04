@@ -14,6 +14,11 @@
 
 <hr>
 
+<p th:if="${param.saved}"
+   style="color: green;">
+    프로필이 저장되었습니다.
+</p>
+
 <h3 th:if="${hasProfile}">
     프로필 수정
 </h3>
@@ -95,7 +100,6 @@
         <tr>
             <td>취업 여부</td>
             <td>
-
                 <label>
                     <input type="radio"
                            name="employed"
@@ -111,14 +115,12 @@
                            th:checked="${profile == null || !profile.employed}">
                     아니오
                 </label>
-
             </td>
         </tr>
 
         <tr>
             <td>학생 여부</td>
             <td>
-
                 <label>
                     <input type="radio"
                            name="student"
@@ -134,14 +136,12 @@
                            th:checked="${profile == null || !profile.student}">
                     아니오
                 </label>
-
             </td>
         </tr>
 
         <tr>
             <td>자가 보유 여부</td>
             <td>
-
                 <label>
                     <input type="radio"
                            name="houseOwner"
@@ -157,7 +157,6 @@
                            th:checked="${profile == null || !profile.houseOwner}">
                     아니오
                 </label>
-
             </td>
         </tr>
 
