@@ -2,7 +2,9 @@ package com.taehyun.youthpolicyplatform.eligibility.service;
 
 import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
 import com.taehyun.youthpolicyplatform.benefit.domain.BenefitCondition;
+import com.taehyun.youthpolicyplatform.benefit.dto.ConditionDisplayDto;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
+import com.taehyun.youthpolicyplatform.benefit.util.ConditionDisplayUtil;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityConditionResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
@@ -36,17 +38,25 @@ public class EligibilityService {
 
             boolean passed = checkCondition(profile, condition);
 
-            if (!passed) {
+            if (!passed && condition.getRequired()) {
                 eligible = false;
             }
+
+            ConditionDisplayDto displayCondition =
+                    ConditionDisplayUtil.convert(condition);
 
             conditionResults.add(
                     new EligibilityConditionResultDto(
                             condition.getFieldName(),
                             condition.getOperator(),
                             condition.getValue(),
+
+                            displayCondition.getFieldLabel(),
+                            displayCondition.getOperatorLabel(),
+                            displayCondition.getValueLabel(),
+
                             passed,
-                            createMessage(condition, passed)
+                            createMessage(condition, profile, passed)
                     )
             );
         }
@@ -64,67 +74,149 @@ public class EligibilityService {
         String operator = condition.getOperator().trim();
         String value = condition.getValue().trim();
 
-        if (fieldName.equals("age")) {
-            return compareNumber(profile.getAge(), operator, Integer.parseInt(value));
-        }
+        return switch (fieldName) {
+            case "age" ->
+                    compareNumber(profile.getAge(), operator, Integer.parseInt(value));
 
-        if (fieldName.equals("middle_income_percent")) {
-            return compareNumber(profile.getMiddleIncomePercent(), operator, Integer.parseInt(value));
-        }
+            case "householdSize" ->
+                    compareNumber(profile.getHouseholdSize(), operator, Integer.parseInt(value));
 
-        if (fieldName.equals("house_owner")) {
-            return compareBoolean(profile.getHouseOwner(), operator, Boolean.parseBoolean(value));
-        }
+            case "monthlyIncome" ->
+                    compareNumber(profile.getMonthlyIncome(), operator, Integer.parseInt(value));
 
-        return false;
+            case "annualIncome" ->
+                    compareNumber(profile.getAnnualIncome(), operator, Integer.parseInt(value));
+
+            case "middleIncomePercent" ->
+                    compareNumber(profile.getMiddleIncomePercent(), operator, Integer.parseInt(value));
+
+            case "region" ->
+                    compareAddress(profile.getAddress(), operator, value);
+
+            case "employed" ->
+                    compareBoolean(profile.getEmployed(), operator, Boolean.parseBoolean(value));
+
+            case "student" ->
+                    compareBoolean(profile.getStudent(), operator, Boolean.parseBoolean(value));
+
+            case "houseOwner" ->
+                    compareBoolean(profile.getHouseOwner(), operator, Boolean.parseBoolean(value));
+
+            default -> false;
+        };
     }
 
-    private String createMessage(BenefitCondition condition, boolean passed) {
-
+    private String createMessage(
+            BenefitCondition condition,
+            UserProfile profile,
+            boolean passed
+    ) {
         String fieldName = condition.getFieldName().trim();
 
         if (passed) {
             return "조건을 충족했습니다.";
         }
 
-        if (fieldName.equals("age")) {
-            return "나이 조건을 충족하지 않습니다.";
-        }
+        return switch (fieldName) {
+            case "age" ->
+                    "나이 조건을 충족하지 않습니다. 현재 나이: " + profile.getAge() + "세";
 
-        if (fieldName.equals("middle_income_percent")) {
-            return "중위소득 기준을 충족하지 않습니다.";
-        }
+            case "region" ->
+                    "거주지역 조건을 충족하지 않습니다. 현재 주소: " + profile.getAddress();
 
-        if (fieldName.equals("house_owner")) {
-            return "주택 소유 여부 조건을 충족하지 않습니다.";
-        }
+            case "householdSize" ->
+                    "가구원 수 조건을 충족하지 않습니다. 현재 가구원 수: " + profile.getHouseholdSize() + "명";
 
-        return "조건을 충족하지 않습니다.";
+            case "monthlyIncome" ->
+                    "월 소득 조건을 충족하지 않습니다. 현재 월 소득: " + profile.getMonthlyIncome() + "만원";
+
+            case "annualIncome" ->
+                    "연 소득 조건을 충족하지 않습니다. 현재 연 소득: " + profile.getAnnualIncome() + "만원";
+
+            case "middleIncomePercent" ->
+                    "중위소득 기준을 충족하지 않습니다. 현재 중위소득: " + profile.getMiddleIncomePercent() + "%";
+
+            case "employed" ->
+                    "취업 여부 조건을 충족하지 않습니다.";
+
+            case "student" ->
+                    "학생 여부 조건을 충족하지 않습니다.";
+
+            case "houseOwner" ->
+                    "주택 보유 여부 조건을 충족하지 않습니다.";
+
+            default ->
+                    "조건을 충족하지 않습니다.";
+        };
     }
 
     private boolean compareNumber(Integer userValue, String operator, Integer conditionValue) {
 
-        if (operator.equals(">=")) {
-            return userValue >= conditionValue;
+        if (userValue == null) {
+            return false;
         }
 
-        if (operator.equals("<=")) {
-            return userValue <= conditionValue;
+        return switch (operator) {
+            case ">=" -> userValue >= conditionValue;
+            case "<=" -> userValue <= conditionValue;
+            case "==" -> userValue.equals(conditionValue);
+            case "!=" -> !userValue.equals(conditionValue);
+            default -> false;
+        };
+    }
+
+    private boolean compareAddress(String address, String operator, String conditionValue) {
+
+        if (address == null || address.isBlank()) {
+            return false;
         }
 
-        if (operator.equals("=")) {
-            return userValue.equals(conditionValue);
+        String normalizedAddress = normalizeRegion(address);
+        String normalizedConditionValue = normalizeRegion(conditionValue);
+
+        return switch (operator) {
+            case "==" -> normalizedAddress.contains(normalizedConditionValue);
+            case "!=" -> !normalizedAddress.contains(normalizedConditionValue);
+            default -> false;
+        };
+    }
+
+    private String normalizeRegion(String value) {
+
+        if (value == null) {
+            return "";
         }
 
-        return false;
+        return value
+                .replace("서울 ", "서울특별시 ")
+                .replace("부산 ", "부산광역시 ")
+                .replace("대구 ", "대구광역시 ")
+                .replace("인천 ", "인천광역시 ")
+                .replace("광주 ", "광주광역시 ")
+                .replace("대전 ", "대전광역시 ")
+                .replace("울산 ", "울산광역시 ")
+                .replace("세종 ", "세종특별자치시 ")
+                .replace("경기 ", "경기도 ")
+                .replace("강원 ", "강원특별자치도 ")
+                .replace("충북 ", "충청북도 ")
+                .replace("충남 ", "충청남도 ")
+                .replace("전북 ", "전북특별자치도 ")
+                .replace("전남 ", "전라남도 ")
+                .replace("경북 ", "경상북도 ")
+                .replace("경남 ", "경상남도 ")
+                .replace("제주 ", "제주특별자치도 ");
     }
 
     private boolean compareBoolean(Boolean userValue, String operator, Boolean conditionValue) {
 
-        if (operator.equals("=")) {
-            return userValue.equals(conditionValue);
+        if (userValue == null) {
+            return false;
         }
 
-        return false;
+        return switch (operator) {
+            case "==" -> userValue.equals(conditionValue);
+            case "!=" -> !userValue.equals(conditionValue);
+            default -> false;
+        };
     }
 }

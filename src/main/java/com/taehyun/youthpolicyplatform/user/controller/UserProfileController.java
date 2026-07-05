@@ -22,7 +22,7 @@ public class UserProfileController {
     @PostMapping("/admin/user-profiles")
     public String saveProfile(
             @RequestParam Integer age,
-            @RequestParam String region,
+            @RequestParam String address,
             @RequestParam Integer householdSize,
             @RequestParam Integer monthlyIncome,
             @RequestParam Integer annualIncome,
@@ -34,7 +34,7 @@ public class UserProfileController {
     ) {
         userProfileService.save(
                 age,
-                region,
+                address,
                 householdSize,
                 monthlyIncome,
                 annualIncome,

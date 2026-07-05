@@ -7,11 +7,19 @@ import lombok.Getter;
 @AllArgsConstructor
 public class EligibilityConditionResultDto {
 
+    // 원본 데이터
     private String fieldName;
     private String operator;
     private String value;
+
+    // 화면 표시용
+    private String fieldLabel;
+    private String operatorLabel;
+    private String valueLabel;
+
+    // 판별 결과
     private boolean passed;
 
-    // 조건별 판별 메시지
+    // 안내 메시지
     private String message;
 }

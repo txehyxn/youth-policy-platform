@@ -14,18 +14,12 @@
 
 <hr>
 
-<p th:if="${param.saved}"
-   style="color: green;">
+<p th:if="${param.saved}" style="color: green;">
     프로필이 저장되었습니다.
 </p>
 
-<h3 th:if="${hasProfile}">
-    프로필 수정
-</h3>
-
-<h3 th:unless="${hasProfile}">
-    프로필 등록
-</h3>
+<h3 th:if="${hasProfile}">프로필 수정</h3>
+<h3 th:unless="${hasProfile}">프로필 등록</h3>
 
 <form th:action="@{/my/profile}" method="post">
 
@@ -39,10 +33,19 @@
         </tr>
 
         <tr>
-            <td>지역</td>
+            <td>주소</td>
             <td>
-                <input type="text" name="region" placeholder="예: 경기도"
-                       th:value="${profile != null ? profile.region : ''}" required>
+                <input type="text"
+                       id="address"
+                       name="address"
+                       placeholder="주소 검색 버튼을 눌러 입력하세요"
+                       th:value="${profile != null ? profile.address : ''}"
+                       readonly
+                       required>
+
+                <button type="button" onclick="searchAddress()">
+                    주소 검색
+                </button>
             </td>
         </tr>
 
@@ -168,6 +171,18 @@
 <p>
     <a th:href="@{/}">메인으로</a>
 </p>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+<script>
+    function searchAddress() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                document.getElementById("address").value = data.address;
+            }
+        }).open();
+    }
+</script>
 
 </body>
 </html>

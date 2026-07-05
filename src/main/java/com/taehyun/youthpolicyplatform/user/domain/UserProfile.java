@@ -18,8 +18,8 @@ public class UserProfile {
     // 사용자 나이
     private Integer age;
 
-    // 거주 지역
-    private String region;
+    // 주소
+    private String address;
 
     // 가구원 수
     private Integer householdSize;
@@ -50,7 +50,7 @@ public class UserProfile {
     // 사용자 프로필 생성자
     public UserProfile(
             Integer age,
-            String region,
+            String address,
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
@@ -61,7 +61,7 @@ public class UserProfile {
             User user
     ) {
         this.age = age;
-        this.region = region;
+        this.address = address;
         this.householdSize = householdSize;
         this.monthlyIncome = monthlyIncome;
         this.annualIncome = annualIncome;
@@ -75,7 +75,7 @@ public class UserProfile {
     // 사용자 프로필 수정
     public void update(
             Integer age,
-            String region,
+            String address,
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
@@ -85,7 +85,7 @@ public class UserProfile {
             Boolean houseOwner
     ) {
         this.age = age;
-        this.region = region;
+        this.address = address;
         this.householdSize = householdSize;
         this.monthlyIncome = monthlyIncome;
         this.annualIncome = annualIncome;

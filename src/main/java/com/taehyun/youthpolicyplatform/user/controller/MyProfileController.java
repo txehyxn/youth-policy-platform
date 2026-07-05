@@ -47,7 +47,7 @@ public class MyProfileController {
     public String saveProfile(
             Authentication authentication,
             @RequestParam Integer age,
-            @RequestParam String region,
+            @RequestParam String address,
             @RequestParam Integer householdSize,
             @RequestParam Integer monthlyIncome,
             @RequestParam Integer annualIncome,
@@ -60,7 +60,7 @@ public class MyProfileController {
         userProfileService.saveForLoggedInUser(
                 authentication.getName(),
                 age,
-                region,
+                address,
                 householdSize,
                 monthlyIncome,
                 annualIncome,

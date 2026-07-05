@@ -12,16 +12,15 @@
 
 <hr>
 
-<h2 th:if="${result.eligible}">
+<h2 th:if="${result.eligible}" style="color: green;">
     최종 결과: 신청 가능합니다.
 </h2>
 
-<h2 th:unless="${result.eligible}">
+<h2 th:unless="${result.eligible}" style="color: red;">
     최종 결과: 신청 불가능합니다.
 </h2>
 
 <div th:unless="${result.eligible}">
-
     <h3>신청 불가능 사유</h3>
 
     <ul>
@@ -30,7 +29,6 @@
             th:text="${condition.message}">
         </li>
     </ul>
-
 </div>
 
 <hr>
@@ -38,34 +36,42 @@
 <h3>조건별 판별 결과</h3>
 
 <table border="1">
-
     <tr>
-        <th>필드명</th>
-        <th>연산자</th>
+        <th>조건 항목</th>
+        <th>연산</th>
         <th>기준값</th>
         <th>결과</th>
         <th>안내 메시지</th>
     </tr>
 
     <tr th:each="condition : ${result.conditionResults}">
-        <td th:text="${condition.fieldName}"></td>
-        <td th:text="${condition.operator}"></td>
-        <td th:text="${condition.value}"></td>
+        <td th:text="${condition.fieldLabel}"></td>
+        <td th:text="${condition.operatorLabel}"></td>
+        <td th:text="${condition.valueLabel}"></td>
 
         <td>
-            <span th:if="${condition.passed}">
+            <span th:if="${condition.passed}" style="color: green;">
                 통과
             </span>
 
-            <span th:unless="${condition.passed}">
+            <span th:unless="${condition.passed}" style="color: red;">
                 실패
             </span>
         </td>
 
         <td th:text="${condition.message}"></td>
     </tr>
-
 </table>
+
+<hr>
+
+<p>
+    <a th:href="@{/benefits}">정책 목록으로 돌아가기</a>
+</p>
+
+<p>
+    <a th:href="@{/my/profile}">내 프로필 수정하기</a>
+</p>
 
 </body>
 </html>

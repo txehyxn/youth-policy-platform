@@ -49,31 +49,43 @@
       method="post">
 
     <p>
-        필드명
-        <input type="text"
-               name="fieldName"
-               placeholder="age">
+        조건 항목
+        <select name="fieldName" required>
+            <option value="age">나이</option>
+            <option value="region">지역</option>
+            <option value="householdSize">가구원 수</option>
+            <option value="monthlyIncome">월 소득</option>
+            <option value="annualIncome">연 소득</option>
+            <option value="middleIncomePercent">중위소득</option>
+            <option value="employed">취업 여부</option>
+            <option value="student">학생 여부</option>
+            <option value="houseOwner">자가 보유 여부</option>
+        </select>
     </p>
 
     <p>
         연산자
-        <input type="text"
-               name="operator"
-               placeholder=">=">
+        <select name="operator" required>
+            <option value=">=">이상</option>
+            <option value="<=">이하</option>
+            <option value="==">같음</option>
+            <option value="!=">다름</option>
+        </select>
     </p>
 
     <p>
         기준값
         <input type="text"
                name="value"
-               placeholder="19">
+               placeholder="예: 19, 경기도, true, false"
+               required>
     </p>
 
     <p>
         필수 여부
         <select name="required">
-            <option value="true">true</option>
-            <option value="false">false</option>
+            <option value="true">필수</option>
+            <option value="false">선택</option>
         </select>
     </p>
 

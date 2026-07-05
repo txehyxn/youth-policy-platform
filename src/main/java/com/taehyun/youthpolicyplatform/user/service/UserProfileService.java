@@ -20,7 +20,7 @@ public class UserProfileService {
     // 관리자용 프로필 등록
     public UserProfile save(
             Integer age,
-            String region,
+            String address,
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
@@ -38,7 +38,7 @@ public class UserProfileService {
 
         UserProfile profile = new UserProfile(
                 age,
-                region,
+                address,
                 householdSize,
                 monthlyIncome,
                 annualIncome,
@@ -71,7 +71,7 @@ public class UserProfileService {
     public UserProfile saveForLoggedInUser(
             String email,
             Integer age,
-            String region,
+            String address,
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
@@ -87,7 +87,7 @@ public class UserProfileService {
                 .map(profile -> {
                     profile.update(
                             age,
-                            region,
+                            address,
                             householdSize,
                             monthlyIncome,
                             annualIncome,
@@ -102,7 +102,7 @@ public class UserProfileService {
                 .orElseGet(() -> {
                     UserProfile profile = new UserProfile(
                             age,
-                            region,
+                            address,
                             householdSize,
                             monthlyIncome,
                             annualIncome,
