@@ -27,4 +27,10 @@ public class Bookmark extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(name = "benefit_id")
     private Benefit benefit;
+
+    // 관심 정책 생성자
+    public Bookmark(User user, Benefit benefit) {
+        this.user = user;
+        this.benefit = benefit;
+    }
 }

@@ -30,70 +30,51 @@
 <form th:action="@{/my/profile}" method="post">
 
     <table>
-
         <tr>
             <td>나이</td>
             <td>
-                <input type="number"
-                       name="age"
-                       min="0"
-                       th:value="${profile != null ? profile.age : ''}"
-                       required>
+                <input type="number" name="age" min="0"
+                       th:value="${profile != null ? profile.age : ''}" required>
             </td>
         </tr>
 
         <tr>
             <td>지역</td>
             <td>
-                <input type="text"
-                       name="region"
-                       placeholder="예: 경기도"
-                       th:value="${profile != null ? profile.region : ''}"
-                       required>
+                <input type="text" name="region" placeholder="예: 경기도"
+                       th:value="${profile != null ? profile.region : ''}" required>
             </td>
         </tr>
 
         <tr>
             <td>가구원 수</td>
             <td>
-                <input type="number"
-                       name="householdSize"
-                       min="1"
-                       th:value="${profile != null ? profile.householdSize : ''}"
-                       required>
+                <input type="number" name="householdSize" min="1"
+                       th:value="${profile != null ? profile.householdSize : ''}" required>
             </td>
         </tr>
 
         <tr>
             <td>월 소득 (만원)</td>
             <td>
-                <input type="number"
-                       name="monthlyIncome"
-                       min="0"
-                       th:value="${profile != null ? profile.monthlyIncome : ''}"
-                       required>
+                <input type="number" name="monthlyIncome" min="0"
+                       th:value="${profile != null ? profile.monthlyIncome : ''}" required>
             </td>
         </tr>
 
         <tr>
             <td>연 소득 (만원)</td>
             <td>
-                <input type="number"
-                       name="annualIncome"
-                       min="0"
-                       th:value="${profile != null ? profile.annualIncome : ''}"
-                       required>
+                <input type="number" name="annualIncome" min="0"
+                       th:value="${profile != null ? profile.annualIncome : ''}" required>
             </td>
         </tr>
 
         <tr>
             <td>중위소득 (%)</td>
             <td>
-                <input type="number"
-                       name="middleIncomePercent"
-                       min="0"
-                       th:value="${profile != null ? profile.middleIncomePercent : ''}"
-                       required>
+                <input type="number" name="middleIncomePercent" min="0"
+                       th:value="${profile != null ? profile.middleIncomePercent : ''}" required>
             </td>
         </tr>
 
@@ -101,17 +82,12 @@
             <td>취업 여부</td>
             <td>
                 <label>
-                    <input type="radio"
-                           name="employed"
-                           value="true"
+                    <input type="radio" name="employed" value="true"
                            th:checked="${profile != null && profile.employed}">
                     예
                 </label>
-
                 <label>
-                    <input type="radio"
-                           name="employed"
-                           value="false"
+                    <input type="radio" name="employed" value="false"
                            th:checked="${profile == null || !profile.employed}">
                     아니오
                 </label>
@@ -122,17 +98,12 @@
             <td>학생 여부</td>
             <td>
                 <label>
-                    <input type="radio"
-                           name="student"
-                           value="true"
+                    <input type="radio" name="student" value="true"
                            th:checked="${profile != null && profile.student}">
                     예
                 </label>
-
                 <label>
-                    <input type="radio"
-                           name="student"
-                           value="false"
+                    <input type="radio" name="student" value="false"
                            th:checked="${profile == null || !profile.student}">
                     아니오
                 </label>
@@ -143,23 +114,17 @@
             <td>자가 보유 여부</td>
             <td>
                 <label>
-                    <input type="radio"
-                           name="houseOwner"
-                           value="true"
+                    <input type="radio" name="houseOwner" value="true"
                            th:checked="${profile != null && profile.houseOwner}">
                     예
                 </label>
-
                 <label>
-                    <input type="radio"
-                           name="houseOwner"
-                           value="false"
+                    <input type="radio" name="houseOwner" value="false"
                            th:checked="${profile == null || !profile.houseOwner}">
                     아니오
                 </label>
             </td>
         </tr>
-
     </table>
 
     <br>
@@ -169,6 +134,34 @@
     </button>
 
 </form>
+
+<hr>
+
+<h3>내 관심 정책</h3>
+
+<p th:if="${bookmarks == null || bookmarks.isEmpty()}">
+    아직 관심 등록한 정책이 없습니다.
+</p>
+
+<table border="1" th:if="${bookmarks != null && !bookmarks.isEmpty()}">
+    <tr>
+        <th>정책명</th>
+        <th>카테고리</th>
+        <th>지원 내용</th>
+        <th>상세보기</th>
+    </tr>
+
+    <tr th:each="bookmark : ${bookmarks}">
+        <td th:text="${bookmark.benefit.title}"></td>
+        <td th:text="${bookmark.benefit.category.name}"></td>
+        <td th:text="${bookmark.benefit.supportAmount}"></td>
+        <td>
+            <a th:href="@{/benefits/{id}(id=${bookmark.benefit.id})}">
+                상세보기
+            </a>
+        </td>
+    </tr>
+</table>
 
 <hr>
 

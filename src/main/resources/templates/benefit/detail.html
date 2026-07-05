@@ -55,6 +55,36 @@
 
 <hr>
 
+<h3>관심 정책</h3>
+
+<div th:if="${isBookmarked}">
+
+    <form th:action="@{/bookmarks/{benefitId}/delete(benefitId=${benefit.id})}"
+          method="post">
+
+        <button type="submit">
+            ♥ 관심 취소
+        </button>
+
+    </form>
+
+</div>
+
+<div th:unless="${isBookmarked}">
+
+    <form th:action="@{/bookmarks/{benefitId}(benefitId=${benefit.id})}"
+          method="post">
+
+        <button type="submit">
+            ♡ 관심 등록
+        </button>
+
+    </form>
+
+</div>
+
+<hr>
+
 <h3>내 조건으로 신청 가능 여부 확인</h3>
 
 <form action="/eligibility/check" method="get">

@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.user.controller;
 
+import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class MyProfileController {
 
     private final UserProfileService userProfileService;
+    private final BookmarkService bookmarkService;
 
     @GetMapping("/my/profile")
     public String profileForm(Authentication authentication, Model model) {
@@ -32,6 +34,11 @@ public class MyProfileController {
         } catch (IllegalArgumentException e) {
             model.addAttribute("hasProfile", false);
         }
+
+        model.addAttribute(
+                "bookmarks",
+                bookmarkService.findMyBookmarks(authentication.getName())
+        );
 
         return "user/my-profile";
     }
