@@ -7,15 +7,13 @@ public class ConditionDisplayUtil {
 
     public static ConditionDisplayDto convert(BenefitCondition condition) {
 
-        String fieldLabel = convertField(condition.getFieldName());
-        String operatorLabel = convertOperator(
-                condition.getFieldName(),
-                condition.getOperator()
-        );
-        String valueLabel = convertValue(
-                condition.getFieldName(),
-                condition.getValue()
-        );
+        String fieldName = condition.getFieldName().trim();
+        String operator = condition.getOperator().trim();
+        String value = condition.getValue().trim();
+
+        String fieldLabel = convertField(fieldName);
+        String operatorLabel = convertOperator(fieldName, operator);
+        String valueLabel = convertValue(fieldName, value);
 
         return new ConditionDisplayDto(
                 fieldLabel,
@@ -28,6 +26,7 @@ public class ConditionDisplayUtil {
 
         return switch (fieldName) {
             case "age" -> "나이";
+            case "region" -> "거주지역";
             case "address" -> "주소";
             case "householdSize" -> "가구원 수";
             case "monthlyIncome" -> "월 소득";
@@ -40,13 +39,9 @@ public class ConditionDisplayUtil {
         };
     }
 
-    private static String convertOperator(
-            String fieldName,
-            String operator
-    ) {
+    private static String convertOperator(String fieldName, String operator) {
 
-        // 주소는 "같음" 대신 빈 문자열
-        if (fieldName.equals("address")) {
+        if (fieldName.equals("region") || fieldName.equals("address")) {
             return "";
         }
 
@@ -62,29 +57,13 @@ public class ConditionDisplayUtil {
     private static String convertValue(String fieldName, String value) {
 
         return switch (fieldName) {
-
-            case "age" ->
-                    value + "세";
-
-            case "monthlyIncome",
-                 "annualIncome" ->
-                    value + "만원";
-
-            case "middleIncomePercent" ->
-                    value + "%";
-
-            case "address" ->
-                    value + " 거주";
-
-            case "employed",
-                 "student" ->
-                    value.equals("true") ? "예" : "아니오";
-
-            case "houseOwner" ->
-                    value.equals("true") ? "주택 보유" : "무주택";
-
-            default ->
-                    value;
+            case "age" -> value + "세";
+            case "monthlyIncome", "annualIncome" -> value + "만원";
+            case "middleIncomePercent" -> value + "%";
+            case "region", "address" -> value + " 거주";
+            case "employed", "student" -> value.equals("true") ? "예" : "아니오";
+            case "houseOwner" -> value.equals("true") ? "주택 보유" : "무주택";
+            default -> value;
         };
     }
 }

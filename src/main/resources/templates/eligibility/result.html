@@ -38,16 +38,23 @@
 <table border="1">
     <tr>
         <th>조건 항목</th>
-        <th>연산</th>
-        <th>기준값</th>
+        <th>정책 기준</th>
+        <th>내 정보</th>
         <th>결과</th>
         <th>안내 메시지</th>
     </tr>
 
     <tr th:each="condition : ${result.conditionResults}">
         <td th:text="${condition.fieldLabel}"></td>
-        <td th:text="${condition.operatorLabel}"></td>
-        <td th:text="${condition.valueLabel}"></td>
+
+        <td>
+            <span th:text="${condition.valueLabel}"></span>
+            <span th:if="${condition.operatorLabel != ''}"
+                  th:text="${condition.operatorLabel}">
+            </span>
+        </td>
+
+        <td th:text="${condition.userValueLabel}"></td>
 
         <td>
             <span th:if="${condition.passed}" style="color: green;">

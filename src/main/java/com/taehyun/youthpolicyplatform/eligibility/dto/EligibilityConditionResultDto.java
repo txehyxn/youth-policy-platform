@@ -12,10 +12,13 @@ public class EligibilityConditionResultDto {
     private String operator;
     private String value;
 
-    // 화면 표시용
+    // 화면 표시용 정책 조건
     private String fieldLabel;
     private String operatorLabel;
     private String valueLabel;
+
+    // 내 정보(화면 표시용)
+    private String userValueLabel;
 
     // 판별 결과
     private boolean passed;

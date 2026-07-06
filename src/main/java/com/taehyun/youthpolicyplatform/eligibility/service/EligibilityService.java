@@ -42,8 +42,7 @@ public class EligibilityService {
                 eligible = false;
             }
 
-            ConditionDisplayDto displayCondition =
-                    ConditionDisplayUtil.convert(condition);
+            ConditionDisplayDto displayCondition = ConditionDisplayUtil.convert(condition);
 
             conditionResults.add(
                     new EligibilityConditionResultDto(
@@ -54,6 +53,8 @@ public class EligibilityService {
                             displayCondition.getFieldLabel(),
                             displayCondition.getOperatorLabel(),
                             displayCondition.getValueLabel(),
+
+                            createUserValueLabel(profile, condition),
 
                             passed,
                             createMessage(condition, profile, passed)
@@ -75,34 +76,34 @@ public class EligibilityService {
         String value = condition.getValue().trim();
 
         return switch (fieldName) {
-            case "age" ->
-                    compareNumber(profile.getAge(), operator, Integer.parseInt(value));
-
-            case "householdSize" ->
-                    compareNumber(profile.getHouseholdSize(), operator, Integer.parseInt(value));
-
-            case "monthlyIncome" ->
-                    compareNumber(profile.getMonthlyIncome(), operator, Integer.parseInt(value));
-
-            case "annualIncome" ->
-                    compareNumber(profile.getAnnualIncome(), operator, Integer.parseInt(value));
-
-            case "middleIncomePercent" ->
-                    compareNumber(profile.getMiddleIncomePercent(), operator, Integer.parseInt(value));
-
-            case "region" ->
-                    compareAddress(profile.getAddress(), operator, value);
-
-            case "employed" ->
-                    compareBoolean(profile.getEmployed(), operator, Boolean.parseBoolean(value));
-
-            case "student" ->
-                    compareBoolean(profile.getStudent(), operator, Boolean.parseBoolean(value));
-
-            case "houseOwner" ->
-                    compareBoolean(profile.getHouseOwner(), operator, Boolean.parseBoolean(value));
-
+            case "age" -> compareNumber(profile.getAge(), operator, Integer.parseInt(value));
+            case "householdSize" -> compareNumber(profile.getHouseholdSize(), operator, Integer.parseInt(value));
+            case "monthlyIncome" -> compareNumber(profile.getMonthlyIncome(), operator, Integer.parseInt(value));
+            case "annualIncome" -> compareNumber(profile.getAnnualIncome(), operator, Integer.parseInt(value));
+            case "middleIncomePercent" -> compareNumber(profile.getMiddleIncomePercent(), operator, Integer.parseInt(value));
+            case "region" -> compareAddress(profile.getAddress(), operator, value);
+            case "employed" -> compareBoolean(profile.getEmployed(), operator, Boolean.parseBoolean(value));
+            case "student" -> compareBoolean(profile.getStudent(), operator, Boolean.parseBoolean(value));
+            case "houseOwner" -> compareBoolean(profile.getHouseOwner(), operator, Boolean.parseBoolean(value));
             default -> false;
+        };
+    }
+
+    private String createUserValueLabel(UserProfile profile, BenefitCondition condition) {
+
+        String fieldName = condition.getFieldName().trim();
+
+        return switch (fieldName) {
+            case "age" -> profile.getAge() + "세";
+            case "region" -> profile.getAddress();
+            case "householdSize" -> profile.getHouseholdSize() + "명";
+            case "monthlyIncome" -> profile.getMonthlyIncome() + "만원";
+            case "annualIncome" -> profile.getAnnualIncome() + "만원";
+            case "middleIncomePercent" -> profile.getMiddleIncomePercent() + "%";
+            case "employed" -> profile.getEmployed() ? "예" : "아니오";
+            case "student" -> profile.getStudent() ? "예" : "아니오";
+            case "houseOwner" -> profile.getHouseOwner() ? "주택 보유" : "무주택";
+            default -> "-";
         };
     }
 
@@ -118,35 +119,16 @@ public class EligibilityService {
         }
 
         return switch (fieldName) {
-            case "age" ->
-                    "나이 조건을 충족하지 않습니다. 현재 나이: " + profile.getAge() + "세";
-
-            case "region" ->
-                    "거주지역 조건을 충족하지 않습니다. 현재 주소: " + profile.getAddress();
-
-            case "householdSize" ->
-                    "가구원 수 조건을 충족하지 않습니다. 현재 가구원 수: " + profile.getHouseholdSize() + "명";
-
-            case "monthlyIncome" ->
-                    "월 소득 조건을 충족하지 않습니다. 현재 월 소득: " + profile.getMonthlyIncome() + "만원";
-
-            case "annualIncome" ->
-                    "연 소득 조건을 충족하지 않습니다. 현재 연 소득: " + profile.getAnnualIncome() + "만원";
-
-            case "middleIncomePercent" ->
-                    "중위소득 기준을 충족하지 않습니다. 현재 중위소득: " + profile.getMiddleIncomePercent() + "%";
-
-            case "employed" ->
-                    "취업 여부 조건을 충족하지 않습니다.";
-
-            case "student" ->
-                    "학생 여부 조건을 충족하지 않습니다.";
-
-            case "houseOwner" ->
-                    "주택 보유 여부 조건을 충족하지 않습니다.";
-
-            default ->
-                    "조건을 충족하지 않습니다.";
+            case "age" -> "나이 조건을 충족하지 않습니다.";
+            case "region" -> "거주지역 조건을 충족하지 않습니다.";
+            case "householdSize" -> "가구원 수 조건을 충족하지 않습니다.";
+            case "monthlyIncome" -> "월 소득 조건을 충족하지 않습니다.";
+            case "annualIncome" -> "연 소득 조건을 충족하지 않습니다.";
+            case "middleIncomePercent" -> "중위소득 기준을 충족하지 않습니다.";
+            case "employed" -> "취업 여부 조건을 충족하지 않습니다.";
+            case "student" -> "학생 여부 조건을 충족하지 않습니다.";
+            case "houseOwner" -> "주택 보유 여부 조건을 충족하지 않습니다.";
+            default -> "조건을 충족하지 않습니다.";
         };
     }
 

@@ -43,6 +43,81 @@
 
 <hr>
 
+<h3>신청 일정 등록</h3>
+
+<form th:action="@{/admin/benefits/{id}/schedules(id=${benefit.id})}"
+      method="post">
+
+    <p>
+        일정 제목
+        <input type="text"
+               name="title"
+               placeholder="예: 청년미래적금 신청"
+               required>
+    </p>
+
+    <p>
+        신청 시작일
+        <input type="date"
+               name="startDate"
+               required>
+    </p>
+
+    <p>
+        신청 종료일
+        <input type="date"
+               name="endDate"
+               required>
+    </p>
+
+    <p>
+        설명
+        <input type="text"
+               name="description"
+               placeholder="예: 온라인 신청">
+    </p>
+
+    <button type="submit">
+        일정 등록
+    </button>
+
+</form>
+
+<hr>
+
+<h3>신청 일정</h3>
+
+<p th:if="${benefit.schedules == null || benefit.schedules.isEmpty()}">
+    등록된 신청 일정이 없습니다.
+</p>
+
+<table border="1" th:if="${benefit.schedules != null && !benefit.schedules.isEmpty()}">
+    <tr>
+        <th>일정 제목</th>
+        <th>시작일</th>
+        <th>종료일</th>
+        <th>설명</th>
+        <th>삭제</th>
+    </tr>
+
+    <tr th:each="schedule : ${benefit.schedules}">
+        <td th:text="${schedule.title}"></td>
+        <td th:text="${schedule.startDate}"></td>
+        <td th:text="${schedule.endDate}"></td>
+        <td th:text="${schedule.description}"></td>
+        <td>
+            <form th:action="@{/admin/benefits/{benefitId}/schedules/delete/{scheduleId}(benefitId=${benefit.id}, scheduleId=${schedule.id})}"
+                  method="post">
+                <button type="submit">
+                    삭제
+                </button>
+            </form>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
 <h3>조건 추가</h3>
 
 <form th:action="@{/admin/benefits/{id}/conditions(id=${benefit.id})}"
