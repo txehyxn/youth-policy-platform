@@ -35,6 +35,33 @@
 
 <hr>
 
+<h3>신청 일정</h3>
+
+<p th:if="${schedules == null || schedules.isEmpty()}">
+    등록된 신청 일정이 없습니다.
+</p>
+
+<table border="1"
+       th:if="${schedules != null && !schedules.isEmpty()}">
+    <tr>
+        <th>일정 제목</th>
+        <th>신청 시작일</th>
+        <th>신청 종료일</th>
+        <th>설명</th>
+        <th>상태</th>
+    </tr>
+
+    <tr th:each="schedule : ${schedules}">
+        <td th:text="${schedule.title}"></td>
+        <td th:text="${schedule.startDate}"></td>
+        <td th:text="${schedule.endDate}"></td>
+        <td th:text="${schedule.description}"></td>
+        <td th:text="${schedule.statusLabel}"></td>
+    </tr>
+</table>
+
+<hr>
+
 <h3>신청 조건</h3>
 
 <table border="1">
@@ -58,7 +85,6 @@
 <h3>관심 정책</h3>
 
 <div th:if="${isBookmarked}">
-
     <form th:action="@{/bookmarks/{benefitId}/delete(benefitId=${benefit.id})}"
           method="post">
 
@@ -67,11 +93,9 @@
         </button>
 
     </form>
-
 </div>
 
 <div th:unless="${isBookmarked}">
-
     <form th:action="@{/bookmarks/{benefitId}(benefitId=${benefit.id})}"
           method="post">
 
@@ -80,7 +104,6 @@
         </button>
 
     </form>
-
 </div>
 
 <hr>
