@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 관심 정책 캘린더</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.css"
+          rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.js"></script>
+
+    <style>
+        .fc-event.upcoming { background-color: #4a90d9; border-color: #4a90d9; }
+        .fc-event.ongoing  { background-color: #2ecc71; border-color: #2ecc71; }
+        .fc-event.urgent   { background-color: #e74c3c; border-color: #e74c3c; }
+        .fc-event.closed   { background-color: #b0b0b0; border-color: #b0b0b0; }
+
+        .fc-day-today {
+            background-color: #fff8e1 !important;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin: 12px 0;
+            font-size: 14px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        #calendar {
+            max-width: 1000px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align:center;">내 관심 정책 캘린더</h1>
+
+<hr>
+
+<div class="legend">
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#4a90d9;"></span>
+        신청 예정
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#2ecc71;"></span>
+        신청중
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#e74c3c;"></span>
+        마감 임박 (3일 이내)
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#b0b0b0;"></span>
+        마감됨
+    </div>
+</div>
+
+<div id="calendar"></div>
+
+<hr>
+
+<p style="text-align:center;">
+    <a href="/my/profile">마이페이지로 돌아가기</a>
+</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const calendarEl = document.getElementById('calendar');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'ko',
+            height: 'auto',
+
+            events: function (info, successCallback, failureCallback) {
+
+                fetch('/api/calendar/bookmark-events')
+                    .then(response => response.json())
+                    .then(data => {
+                        const events = data.map(item => ({
+                            title: item.dDayLabel + ' | ' + item.title,
+                            start: item.start,
+                            end: item.end,
+                            url: item.url,
+                            classNames: [item.colorClass]
+                        }));
+                        successCallback(events);
+                    })
+                    .catch(error => failureCallback(error));
+            },
+
+            eventClick: function (info) {
+                info.jsEvent.preventDefault();
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                }
+            }
+        });
+
+        calendar.render();
+    });
+</script>
+
+</body>
+</html>

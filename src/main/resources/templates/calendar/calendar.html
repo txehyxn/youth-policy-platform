@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정책 신청 일정 캘린더</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.css"
+          rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.js"></script>
+
+    <style>
+        /* 상태별 색상 정의 */
+        .fc-event.upcoming { background-color: #4a90d9; border-color: #4a90d9; }
+        .fc-event.ongoing  { background-color: #2ecc71; border-color: #2ecc71; }
+        .fc-event.urgent   { background-color: #e74c3c; border-color: #e74c3c; }
+        .fc-event.closed   { background-color: #b0b0b0; border-color: #b0b0b0; }
+
+        /* 오늘 날짜 칸 강조 */
+        .fc-day-today {
+            background-color: #fff8e1 !important;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        #calendar {
+            max-width: 1000px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align:center;">정책 신청 일정 캘린더</h1>
+
+<hr>
+
+<!-- 필터 영역 -->
+<div style="text-align:center;">
+    <label for="categorySelect">카테고리 필터:</label>
+    <select id="categorySelect">
+        <option value="">전체</option>
+        <option th:each="category : ${categories}"
+                th:value="${category.id}"
+                th:text="${category.name}">
+        </option>
+    </select>
+</div>
+
+<!-- 색상 범례 -->
+<div class="legend" style="justify-content:center;">
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#4a90d9;"></span>
+        신청 예정
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#2ecc71;"></span>
+        신청중
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#e74c3c;"></span>
+        마감 임박 (3일 이내)
+    </div>
+    <div class="legend-item">
+        <span class="legend-color" style="background-color:#b0b0b0;"></span>
+        마감됨
+    </div>
+</div>
+
+<div id="calendar"></div>
+
+<hr>
+
+<p style="text-align:center;">
+    <a href="/benefits">정책 목록으로 돌아가기</a>
+</p>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const calendarEl = document.getElementById('calendar');
+        const categorySelect = document.getElementById('categorySelect');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'ko',
+            height: 'auto',
+
+            // 서버에서 일정 데이터를 가져오는 부분
+            events: function (info, successCallback, failureCallback) {
+
+                const categoryId = categorySelect.value;
+                let url = '/api/calendar/events';
+
+                if (categoryId) {
+                    url += '?categoryId=' + categoryId;
+                }
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // 서버에서 받은 데이터를 FullCalendar가 이해하는 형식으로 다시 포장
+                        const events = data.map(item => ({
+                            title: item.dDayLabel + ' | ' + item.title,
+                            start: item.start,
+                            end: item.end,
+                            url: item.url,
+                            classNames: [item.colorClass]
+                        }));
+                        successCallback(events);
+                    })
+                    .catch(error => failureCallback(error));
+            },
+
+            // 이벤트를 클릭했을 때 새 창 대신 같은 창에서 이동
+            eventClick: function (info) {
+                info.jsEvent.preventDefault();
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                }
+            }
+        });
+
+        calendar.render();
+
+        // 필터를 바꾸면 캘린더를 다시 불러온다
+        categorySelect.addEventListener('change', function () {
+            calendar.refetchEvents();
+        });
+    });
+</script>
+
+</body>
+</html>
