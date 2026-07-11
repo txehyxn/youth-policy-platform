@@ -24,9 +24,34 @@
     <p>
         <a href="/calendar">📅 정책 신청 일정 캘린더</a>
     </p>
+
     <p>
         <a href="/my/profile">내 프로필 관리</a>
     </p>
+
+    <!-- 관리자에게만 보이는 영역  admin@youthpolicy.com-->
+    <div th:if="${isAdmin}"
+         style="margin-top:20px; padding:10px; border:1px solid #999;">
+
+        <h4>⚙️ 관리자 메뉴</h4>
+
+        <p>
+            <a href="/admin/benefits">정책 관리 (추가/수정/삭제)</a>
+        </p>
+
+        <p>
+            <a href="/admin/categories">카테고리 관리</a>
+        </p>
+
+        <p>
+            <a href="/admin/conditions">신청 조건 관리</a>
+        </p>
+
+        <p>
+            <a href="/admin/user-profiles">사용자 프로필 관리</a>
+        </p>
+
+    </div>
 
     <p>
         <a href="/logout">로그아웃</a>

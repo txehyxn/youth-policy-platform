@@ -18,16 +18,18 @@ public class BenefitScheduleController {
     public String saveSchedule(
             @PathVariable Long benefitId,
             @RequestParam String title,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam String description
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam String description,
+            @RequestParam(required = false, defaultValue = "false") Boolean alwaysOpen
     ) {
         benefitScheduleService.save(
                 benefitId,
                 title,
                 startDate,
                 endDate,
-                description
+                description,
+                alwaysOpen
         );
 
         return "redirect:/admin/benefits/" + benefitId;

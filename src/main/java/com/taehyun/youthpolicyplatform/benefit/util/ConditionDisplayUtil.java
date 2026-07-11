@@ -58,7 +58,7 @@ public class ConditionDisplayUtil {
 
         return switch (fieldName) {
             case "age" -> value + "세";
-            case "monthlyIncome", "annualIncome" -> value + "만원";
+            case "monthlyIncome", "annualIncome" -> value + "원";
             case "middleIncomePercent" -> value + "%";
             case "region", "address" -> value + " 거주";
             case "employed", "student" -> value.equals("true") ? "예" : "아니오";

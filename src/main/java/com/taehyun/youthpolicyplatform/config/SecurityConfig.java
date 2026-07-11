@@ -22,9 +22,12 @@ public class SecurityConfig {
                                 "/signup",
                                 "/login",
                                 "/benefits",
-                                "/benefits/**"
+                                "/benefits/**",
+                                "/calendar",
+                                "/api/calendar/events"
                         ).permitAll()
-                        .requestMatchers("/admin/**").permitAll()
+                        // 관리자 페이지는 ADMIN 또는 SUPER_ADMIN 권한을 가진 사람만 들어갈 수 있다
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

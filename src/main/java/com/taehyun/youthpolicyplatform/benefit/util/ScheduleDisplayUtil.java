@@ -10,6 +10,17 @@ public class ScheduleDisplayUtil {
     // BenefitSchedule 하나를 받아서, 화면에 보여줄 형태(ScheduleDisplayDto)로 바꿔주는 함수
     public static ScheduleDisplayDto convert(BenefitSchedule schedule) {
 
+        // 상시 신청이면 날짜 계산 없이 바로 "상시"로 처리한다
+        if (Boolean.TRUE.equals(schedule.getAlwaysOpen())) {
+            return new ScheduleDisplayDto(
+                    schedule.getTitle(),
+                    null,
+                    null,
+                    schedule.getDescription(),
+                    "상시"
+            );
+        }
+
         String statusLabel = calculateStatus(
                 schedule.getStartDate(),
                 schedule.getEndDate()

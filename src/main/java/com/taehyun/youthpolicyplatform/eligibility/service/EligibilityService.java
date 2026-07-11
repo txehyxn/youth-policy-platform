@@ -97,8 +97,8 @@ public class EligibilityService {
             case "age" -> profile.getAge() + "세";
             case "region" -> profile.getAddress();
             case "householdSize" -> profile.getHouseholdSize() + "명";
-            case "monthlyIncome" -> profile.getMonthlyIncome() + "만원";
-            case "annualIncome" -> profile.getAnnualIncome() + "만원";
+            case "monthlyIncome" -> profile.getMonthlyIncome() + "원";
+            case "annualIncome" -> profile.getAnnualIncome() + "원";
             case "middleIncomePercent" -> profile.getMiddleIncomePercent() + "%";
             case "employed" -> profile.getEmployed() ? "예" : "아니오";
             case "student" -> profile.getStudent() ? "예" : "아니오";

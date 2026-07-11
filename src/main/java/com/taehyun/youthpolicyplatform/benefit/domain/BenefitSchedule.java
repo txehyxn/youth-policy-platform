@@ -20,15 +20,18 @@ public class BenefitSchedule {
     // 일정 제목
     private String title;
 
-    // 신청 시작일
+    // 신청 시작일 (상시 신청이면 null)
     private LocalDate startDate;
 
-    // 신청 종료일
+    // 신청 종료일 (상시 신청이면 null)
     private LocalDate endDate;
 
     // 일정 설명
     @Column(length = 1000)
     private String description;
+
+    // 상시 신청 여부: true면 시작일/종료일 없이 항상 신청 가능
+    private Boolean alwaysOpen;
 
     // 일정이 속한 정책
     @ManyToOne(fetch = FetchType.LAZY)
@@ -40,12 +43,14 @@ public class BenefitSchedule {
             LocalDate startDate,
             LocalDate endDate,
             String description,
+            Boolean alwaysOpen,
             Benefit benefit
     ) {
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         this.description = description;
+        this.alwaysOpen = alwaysOpen;
         this.benefit = benefit;
     }
 
@@ -54,11 +59,13 @@ public class BenefitSchedule {
             String title,
             LocalDate startDate,
             LocalDate endDate,
-            String description
+            String description,
+            Boolean alwaysOpen
     ) {
         this.title = title;
         this.startDate = startDate;
         this.endDate = endDate;
         this.description = description;
+        this.alwaysOpen = alwaysOpen;
     }
 }

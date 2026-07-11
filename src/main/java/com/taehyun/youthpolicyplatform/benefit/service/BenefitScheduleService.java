@@ -23,16 +23,22 @@ public class BenefitScheduleService {
             String title,
             LocalDate startDate,
             LocalDate endDate,
-            String description
+            String description,
+            Boolean alwaysOpen
     ) {
         Benefit benefit = benefitRepository.findById(benefitId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
 
+        // 상시 신청이면 시작일/종료일은 의미가 없으므로 무조건 null로 저장한다
+        LocalDate finalStartDate = Boolean.TRUE.equals(alwaysOpen) ? null : startDate;
+        LocalDate finalEndDate = Boolean.TRUE.equals(alwaysOpen) ? null : endDate;
+
         BenefitSchedule schedule = new BenefitSchedule(
                 title,
-                startDate,
-                endDate,
+                finalStartDate,
+                finalEndDate,
                 description,
+                alwaysOpen,
                 benefit
         );
 

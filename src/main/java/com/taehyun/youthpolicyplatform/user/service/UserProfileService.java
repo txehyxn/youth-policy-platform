@@ -5,6 +5,7 @@ import com.taehyun.youthpolicyplatform.user.domain.User;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import com.taehyun.youthpolicyplatform.user.repository.UserRepository;
+import com.taehyun.youthpolicyplatform.user.util.IncomeCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,6 @@ public class UserProfileService {
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
-            Integer middleIncomePercent,
             Boolean employed,
             Boolean student,
             Boolean houseOwner,
@@ -35,6 +35,10 @@ public class UserProfileService {
                 .orElseGet(() -> userRepository.save(
                         new User("test@test.com", "test1234", Role.USER)
                 ));
+
+        // 중위소득 %는 직접 입력받지 않고, 월소득과 가구원 수로 자동 계산한다
+        Integer middleIncomePercent =
+                IncomeCalculator.calculateMiddleIncomePercent(monthlyIncome, householdSize);
 
         UserProfile profile = new UserProfile(
                 age,
@@ -75,13 +79,16 @@ public class UserProfileService {
             Integer householdSize,
             Integer monthlyIncome,
             Integer annualIncome,
-            Integer middleIncomePercent,
             Boolean employed,
             Boolean student,
             Boolean houseOwner
     ) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 중위소득 %는 직접 입력받지 않고, 월소득과 가구원 수로 자동 계산한다
+        Integer middleIncomePercent =
+                IncomeCalculator.calculateMiddleIncomePercent(monthlyIncome, householdSize);
 
         return userProfileRepository.findByUser(user)
                 .map(profile -> {

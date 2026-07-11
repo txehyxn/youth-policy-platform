@@ -51,7 +51,6 @@ public class MyProfileController {
             @RequestParam Integer householdSize,
             @RequestParam Integer monthlyIncome,
             @RequestParam Integer annualIncome,
-            @RequestParam Integer middleIncomePercent,
             @RequestParam Boolean employed,
             @RequestParam Boolean student,
             @RequestParam Boolean houseOwner
@@ -64,7 +63,6 @@ public class MyProfileController {
                 householdSize,
                 monthlyIncome,
                 annualIncome,
-                middleIncomePercent,
                 employed,
                 student,
                 houseOwner

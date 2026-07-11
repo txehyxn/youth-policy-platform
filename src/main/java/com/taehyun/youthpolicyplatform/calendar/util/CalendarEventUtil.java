@@ -13,7 +13,13 @@ public class CalendarEventUtil {
     private static final long URGENT_THRESHOLD_DAYS = 3;
 
     // 일정 하나(BenefitSchedule)를 받아서 달력용 데이터(CalendarEventDto)로 바꿔주는 함수
+    // 상시 신청(alwaysOpen)이면 날짜가 없어서 달력에 점으로 찍을 수 없으므로 null을 돌려준다
     public static CalendarEventDto convert(BenefitSchedule schedule) {
+
+        // 상시 신청은 날짜 기반 달력에 표시할 수 없으므로 건너뛴다
+        if (Boolean.TRUE.equals(schedule.getAlwaysOpen())) {
+            return null;
+        }
 
         Benefit benefit = schedule.getBenefit();
 

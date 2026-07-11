@@ -21,6 +21,19 @@
 <h3 th:if="${hasProfile}">프로필 수정</h3>
 <h3 th:unless="${hasProfile}">프로필 등록</h3>
 
+<!-- 자동 계산된 중위소득 결과 표시 (직접 입력 아님) -->
+<div th:if="${hasProfile}"
+     style="background:#f5f5f5; padding:10px; margin-bottom:15px;">
+    <strong>내 소득분위(자동계산): </strong>
+    <span th:text="${profile.middleIncomePercent} + '%'"></span>
+
+    <p style="font-size:12px; color:#666;">
+        ※ 입력하신 월소득과 가구원 수를 기준으로 자동 계산된 참고용 수치입니다.
+        재산 등은 반영되지 않아 정부 공식 소득분위와 다를 수 있습니다.
+        정확한 값은 복지로(bokjiro.go.kr)에서 확인하세요.
+    </p>
+</div>
+
 <form th:action="@{/my/profile}" method="post">
 
     <table>
@@ -58,26 +71,21 @@
         </tr>
 
         <tr>
-            <td>월 소득 (만원)</td>
+            <td>월 소득 (원)</td>
             <td>
                 <input type="number" name="monthlyIncome" min="0"
                        th:value="${profile != null ? profile.monthlyIncome : ''}" required>
+                <span style="font-size:12px; color:#666;">
+                    세전 월급 기준으로 입력해주세요 (예: 2500000)
+                </span>
             </td>
         </tr>
 
         <tr>
-            <td>연 소득 (만원)</td>
+            <td>연 소득 (원)</td>
             <td>
                 <input type="number" name="annualIncome" min="0"
                        th:value="${profile != null ? profile.annualIncome : ''}" required>
-            </td>
-        </tr>
-
-        <tr>
-            <td>중위소득 (%)</td>
-            <td>
-                <input type="number" name="middleIncomePercent" min="0"
-                       th:value="${profile != null ? profile.middleIncomePercent : ''}" required>
             </td>
         </tr>
 
