@@ -1033,3 +1033,109 @@ formLogin() 설정
 2. 사용자 입력값과 정책 조건값은 형식이 다를 수 있으므로 비교 전에 표준화 과정이 필요하다.
 3. 정책 조건은 단순 문자열 비교만으로 처리하면 예외가 많아질 수 있다.
 4. 프로필 데이터 구조를 변경할 때는 Entity, Service, Controller, HTML, 판별 로직을 함께 수정해야 한다.
+# Trouble Shooting - 정책 등록 시 지원 내용 저장 오류 (Data Too Long)
+
+## 발생 일시
+
+2026-07-12
+
+---
+
+## 문제 상황
+
+관리자 페이지에서 새로운 청년 정책을 등록하던 중 500 Internal Server Error가 발생하였다.
+
+정책의 지원 내용을 입력하고 등록 버튼을 누르자 다음과 같은 오류가 출력되었다.
+
+```text
+Data truncation: Data too long for column 'support_amount' at row 1
+```
+
+Spring Boot 로그에서는 다음과 같은 예외가 확인되었다.
+
+```text
+org.springframework.dao.DataIntegrityViolationException:
+could not execute statement
+```
+
+---
+
+## 원인 분석
+
+`Benefit` 엔티티의 `supportAmount` 필드는 다음과 같이 단순히 `String` 타입으로만 선언되어 있었다.
+
+```java
+private String supportAmount;
+```
+
+JPA에서는 별도의 길이를 지정하지 않으면 MySQL에서 기본적으로 `VARCHAR(255)` 타입으로 컬럼을 생성한다.
+
+하지만 실제 청년 정책의 지원 내용은 지원 금액, 지급 방식, 신청 방법, 지급 횟수 등 다양한 정보를 포함하기 때문에 255자를 초과하는 경우가 많았다.
+
+이번에 등록하려던 정책 역시 지원 내용이 255자를 초과하면서 MySQL에서 데이터를 저장하지 못했고, 다음 오류가 발생하였다.
+
+```text
+Data too long for column 'support_amount'
+```
+
+즉, 애플리케이션 로직의 문제가 아니라 **데이터베이스 컬럼 길이 제한으로 인해 발생한 오류**였다.
+
+---
+
+## 해결 방법
+
+### 1. Benefit 엔티티 수정
+
+정책 설명과 지원 내용은 긴 문자열이 저장될 가능성이 높으므로 컬럼 길이를 명시적으로 늘려주었다.
+
+기존 코드
+
+```java
+private String description;
+
+private String supportAmount;
+```
+
+수정 후
+
+```java
+@Column(length = 3000)
+private String description;
+
+@Column(length = 2000)
+private String supportAmount;
+```
+
+---
+
+### 2. 데이터베이스 컬럼 수정
+
+`ddl-auto: update` 설정으로도 컬럼 길이가 변경되지 않는 경우를 대비하여 MySQL에서 직접 컬럼 길이를 수정하였다.
+
+```sql
+ALTER TABLE benefit
+MODIFY COLUMN description VARCHAR(3000);
+
+ALTER TABLE benefit
+MODIFY COLUMN support_amount VARCHAR(2000);
+```
+
+---
+
+## 결과
+
+컬럼 길이를 확장한 이후 긴 지원 내용을 포함한 정책도 정상적으로 등록되는 것을 확인하였다.
+
+더 이상 `DataIntegrityViolationException`이 발생하지 않았으며 정책 등록 기능이 정상 동작하였다.
+
+---
+
+## 배운 점
+
+이번 문제를 통해 JPA에서 `String` 타입은 기본적으로 `VARCHAR(255)`로 생성된다는 점을 다시 확인하였다.
+
+정책 설명이나 지원 내용처럼 길이가 일정하지 않은 데이터는 엔티티 설계 단계에서 컬럼 길이를 충분히 고려해야 한다.
+
+또한 `DataIntegrityViolationException`이 발생했을 때는 서비스 로직뿐 아니라 데이터베이스의 컬럼 제약 조건도 함께 확인해야 한다는 점을 배웠다.
+
+마지막으로 `ddl-auto: update` 설정이 항상 기존 컬럼의 길이 변경까지 자동으로 처리하는 것은 아니므로, 필요한 경우 직접 SQL을 사용하여 스키마를 수정해야 한다는 점도 확인할 수 있었다.
