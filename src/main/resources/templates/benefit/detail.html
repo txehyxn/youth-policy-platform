@@ -53,8 +53,14 @@
 
     <tr th:each="schedule : ${schedules}">
         <td th:text="${schedule.title}"></td>
-        <td th:text="${schedule.startDate}"></td>
-        <td th:text="${schedule.endDate}"></td>
+
+        <!-- 상시 신청이면 날짜 칸에 '상시'라고 표시한다 -->
+        <td th:if="${schedule.startDate == null}" colspan="2">
+            <strong style="color:#2e86de;">상시 모집</strong>
+        </td>
+        <td th:unless="${schedule.startDate == null}" th:text="${schedule.startDate}"></td>
+        <td th:unless="${schedule.startDate == null}" th:text="${schedule.endDate}"></td>
+
         <td th:text="${schedule.description}"></td>
         <td th:text="${schedule.statusLabel}"></td>
     </tr>

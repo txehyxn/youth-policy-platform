@@ -24,9 +24,11 @@ public class Benefit extends BaseTimeEntity {
     private String title;
 
     // 정책 설명
+    @Column(length = 2000)
     private String description;
 
     // 지원 내용
+    @Column(length = 2000)
     private String supportAmount;
 
     // 신청 링크
@@ -38,19 +40,21 @@ public class Benefit extends BaseTimeEntity {
     private BenefitCategory category;
 
     // 정책에 연결된 신청 조건 목록
-    @OneToMany(mappedBy = "benefit")
+    // cascade = ALL: 정책이 저장/삭제되면 조건들도 같이 저장/삭제된다
+    // orphanRemoval = true: 목록에서 조건이 빠지면 DB에서도 자동으로 삭제된다
+    @OneToMany(mappedBy = "benefit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BenefitCondition> conditions = new ArrayList<>();
 
     // 정책 신청 일정 목록
-    @OneToMany(mappedBy = "benefit")
+    @OneToMany(mappedBy = "benefit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BenefitSchedule> schedules = new ArrayList<>();
 
     // 정책 신청에 필요한 서류 목록
-    @OneToMany(mappedBy = "benefit")
+    @OneToMany(mappedBy = "benefit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BenefitDocument> documents = new ArrayList<>();
 
-    // 이 정책을 저장한 사용자 목록
-    @OneToMany(mappedBy = "benefit")
+    // 이 정책을 저장한 사용자 목록 (북마크)
+    @OneToMany(mappedBy = "benefit", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bookmark> bookmarks = new ArrayList<>();
 
     // 정책 생성자

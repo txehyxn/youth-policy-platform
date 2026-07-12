@@ -17,7 +17,7 @@ public class BenefitConditionService {
     private final BenefitConditionRepository benefitConditionRepository;
     private final BenefitRepository benefitRepository;
 
-    // 정책 조건 등록
+    // ===== 기존 방식 (범용) - 그대로 유지 =====
     public BenefitCondition save(
             Long benefitId,
             String fieldName,
@@ -25,8 +25,7 @@ public class BenefitConditionService {
             String value,
             Boolean required
     ) {
-        Benefit benefit = benefitRepository.findById(benefitId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
+        Benefit benefit = findBenefit(benefitId);
 
         BenefitCondition condition = new BenefitCondition(
                 fieldName,
@@ -39,13 +38,88 @@ public class BenefitConditionService {
         return benefitConditionRepository.save(condition);
     }
 
-    // 전체 정책 조건 조회
+    // ===== 사람이 알기 쉬운 방식 (신규) =====
+
+    // 나이: "몇 세부터 ~ 몇 세까지"를 입력받아서, 내부적으로 age >= 최소 / age <= 최대 조건을 만든다
+    public void saveAgeRange(
+            Long benefitId,
+            Integer minAge,
+            Integer maxAge,
+            Boolean required
+    ) {
+        Benefit benefit = findBenefit(benefitId);
+
+        if (minAge != null) {
+            benefitConditionRepository.save(
+                    new BenefitCondition("age", ">=", minAge.toString(), required, benefit)
+            );
+        }
+
+        if (maxAge != null) {
+            benefitConditionRepository.save(
+                    new BenefitCondition("age", "<=", maxAge.toString(), required, benefit)
+            );
+        }
+    }
+
+    // 지역: 시/도를 선택받아서, 내부적으로 region == 선택값 조건을 만든다
+    public void saveRegion(
+            Long benefitId,
+            String region,
+            Boolean required
+    ) {
+        Benefit benefit = findBenefit(benefitId);
+
+        benefitConditionRepository.save(
+                new BenefitCondition("region", "==", region, required, benefit)
+        );
+    }
+
+    // 중위소득: "몇 % 이하"만 입력받아서, 내부적으로 middleIncomePercent <= 값 조건을 만든다
+    public void saveMiddleIncomePercent(
+            Long benefitId,
+            Integer maxPercent,
+            Boolean required
+    ) {
+        Benefit benefit = findBenefit(benefitId);
+
+        benefitConditionRepository.save(
+                new BenefitCondition(
+                        "middleIncomePercent",
+                        "<=",
+                        maxPercent.toString(),
+                        required,
+                        benefit
+                )
+        );
+    }
+
+    // 취업/학생/자가보유 여부: O/X만 입력받아서, 내부적으로 항목 == true/false 조건을 만든다
+    public void saveBooleanCondition(
+            Long benefitId,
+            String fieldName,
+            Boolean value,
+            Boolean required
+    ) {
+        Benefit benefit = findBenefit(benefitId);
+
+        benefitConditionRepository.save(
+                new BenefitCondition(fieldName, "==", value.toString(), required, benefit)
+        );
+    }
+
+    // ===== 공통 =====
+
     public List<BenefitCondition> findAll() {
         return benefitConditionRepository.findAll();
     }
 
-    // 정책 조건 삭제
     public void delete(Long id) {
         benefitConditionRepository.deleteById(id);
+    }
+
+    private Benefit findBenefit(Long benefitId) {
+        return benefitRepository.findById(benefitId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 정책입니다."));
     }
 }

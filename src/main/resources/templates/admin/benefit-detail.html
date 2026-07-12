@@ -45,43 +45,65 @@
 
 <h3>신청 일정 등록</h3>
 
-<form th:action="@{/admin/benefits/{id}/schedules(id=${benefit.id})}"
+<form id="scheduleForm"
+      th:action="@{/admin/benefits/{id}/schedules(id=${benefit.id})}"
       method="post">
 
     <p>
         일정 제목
-        <input type="text"
-               name="title"
-               placeholder="예: 청년미래적금 신청"
-               required>
+        <input type="text" name="title" placeholder="예: 청년미래적금 신청" required>
     </p>
 
     <p>
+        <label>
+            <input type="checkbox" id="alwaysOpenCheckbox" name="alwaysOpen"
+                   value="true" onchange="toggleDateFields()">
+            상시 신청 (마감 없이 항상 신청 가능)
+        </label>
+    </p>
+
+    <p id="dateFieldsWrapper">
         신청 시작일
-        <input type="date"
-               name="startDate"
-               required>
+        <input type="date" id="startDateInput" name="startDate" required>
     </p>
 
-    <p>
+    <p id="endDateWrapper">
         신청 종료일
-        <input type="date"
-               name="endDate"
-               required>
+        <input type="date" id="endDateInput" name="endDate" required>
     </p>
 
     <p>
         설명
-        <input type="text"
-               name="description"
-               placeholder="예: 온라인 신청">
+        <input type="text" name="description" placeholder="예: 온라인 신청">
     </p>
 
-    <button type="submit">
-        일정 등록
-    </button>
+    <button type="submit">일정 등록</button>
 
 </form>
+
+<script>
+    function toggleDateFields() {
+        const isAlwaysOpen = document.getElementById('alwaysOpenCheckbox').checked;
+        const startDateInput = document.getElementById('startDateInput');
+        const endDateInput = document.getElementById('endDateInput');
+        const dateFieldsWrapper = document.getElementById('dateFieldsWrapper');
+        const endDateWrapper = document.getElementById('endDateWrapper');
+
+        if (isAlwaysOpen) {
+            dateFieldsWrapper.style.display = 'none';
+            endDateWrapper.style.display = 'none';
+            startDateInput.required = false;
+            endDateInput.required = false;
+            startDateInput.value = '';
+            endDateInput.value = '';
+        } else {
+            dateFieldsWrapper.style.display = 'block';
+            endDateWrapper.style.display = 'block';
+            startDateInput.required = true;
+            endDateInput.required = true;
+        }
+    }
+</script>
 
 <hr>
 
@@ -102,15 +124,18 @@
 
     <tr th:each="schedule : ${benefit.schedules}">
         <td th:text="${schedule.title}"></td>
-        <td th:text="${schedule.startDate}"></td>
-        <td th:text="${schedule.endDate}"></td>
+
+        <td th:if="${schedule.alwaysOpen}" colspan="2">
+            <strong style="color:#2e86de;">상시</strong>
+        </td>
+        <td th:unless="${schedule.alwaysOpen}" th:text="${schedule.startDate}"></td>
+        <td th:unless="${schedule.alwaysOpen}" th:text="${schedule.endDate}"></td>
+
         <td th:text="${schedule.description}"></td>
         <td>
             <form th:action="@{/admin/benefits/{benefitId}/schedules/delete/{scheduleId}(benefitId=${benefit.id}, scheduleId=${schedule.id})}"
                   method="post">
-                <button type="submit">
-                    삭제
-                </button>
+                <button type="submit">삭제</button>
             </form>
         </td>
     </tr>
@@ -118,68 +143,145 @@
 
 <hr>
 
-<h3>조건 추가</h3>
+<h3>신청 조건 등록</h3>
 
-<form th:action="@{/admin/benefits/{id}/conditions(id=${benefit.id})}"
-      method="post">
+<p style="font-size:13px; color:#666;">
+    각 조건은 서로 독립된 폼이에요. 필요한 조건만 골라서 등록하시면 됩니다.
+</p>
 
-    <p>
-        조건 항목
-        <select name="fieldName" required>
-            <option value="age">나이</option>
-            <option value="region">지역</option>
-            <option value="householdSize">가구원 수</option>
-            <option value="monthlyIncome">월 소득</option>
-            <option value="annualIncome">연 소득</option>
-            <option value="middleIncomePercent">중위소득</option>
-            <option value="employed">취업 여부</option>
-            <option value="student">학생 여부</option>
-            <option value="houseOwner">자가 보유 여부</option>
-        </select>
-    </p>
+<!-- ① 나이 조건 -->
+<div style="border:1px solid #ddd; padding:12px; margin-bottom:12px;">
+    <h4>① 나이 조건</h4>
 
-    <p>
-        연산자
-        <select name="operator" required>
-            <option value=">=">이상</option>
-            <option value="<=">이하</option>
-            <option value="==">같음</option>
-            <option value="!=">다름</option>
-        </select>
-    </p>
+    <form th:action="@{/admin/benefits/{id}/conditions/age(id=${benefit.id})}" method="post">
 
-    <p>
-        기준값
-        <input type="text"
-               name="value"
-               placeholder="예: 19, 경기도, true, false"
-               required>
-    </p>
+        <p>
+            <input type="number" name="minAge" placeholder="최소 나이 (예: 19)" min="0" style="width:150px;">
+            세 부터
+            &nbsp;~&nbsp;
+            <input type="number" name="maxAge" placeholder="최대 나이 (예: 34)" min="0" style="width:150px;">
+            세 까지
+        </p>
 
-    <p>
-        필수 여부
-        <select name="required">
-            <option value="true">필수</option>
-            <option value="false">선택</option>
-        </select>
-    </p>
+        <p>
+            <label>
+                <input type="checkbox" name="required" value="true" checked>
+                필수 조건입니다
+            </label>
+        </p>
 
-    <button type="submit">
-        조건 등록
-    </button>
+        <button type="submit">나이 조건 등록</button>
+    </form>
+</div>
 
-</form>
+<!-- ② 지역 조건 -->
+<div style="border:1px solid #ddd; padding:12px; margin-bottom:12px;">
+    <h4>② 지역 조건</h4>
+
+    <form th:action="@{/admin/benefits/{id}/conditions/region(id=${benefit.id})}" method="post">
+
+        <p>
+            거주 지역:
+            <select name="region" required>
+                <option value="서울특별시">서울특별시</option>
+                <option value="부산광역시">부산광역시</option>
+                <option value="대구광역시">대구광역시</option>
+                <option value="인천광역시">인천광역시</option>
+                <option value="광주광역시">광주광역시</option>
+                <option value="대전광역시">대전광역시</option>
+                <option value="울산광역시">울산광역시</option>
+                <option value="세종특별자치시">세종특별자치시</option>
+                <option value="경기도">경기도</option>
+                <option value="강원특별자치도">강원특별자치도</option>
+                <option value="충청북도">충청북도</option>
+                <option value="충청남도">충청남도</option>
+                <option value="전북특별자치도">전북특별자치도</option>
+                <option value="전라남도">전라남도</option>
+                <option value="경상북도">경상북도</option>
+                <option value="경상남도">경상남도</option>
+                <option value="제주특별자치도">제주특별자치도</option>
+            </select>
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="required" value="true" checked>
+                필수 조건입니다
+            </label>
+        </p>
+
+        <button type="submit">지역 조건 등록</button>
+    </form>
+</div>
+
+<!-- ③ 중위소득 조건 -->
+<div style="border:1px solid #ddd; padding:12px; margin-bottom:12px;">
+    <h4>③ 중위소득 조건</h4>
+
+    <form th:action="@{/admin/benefits/{id}/conditions/middle-income(id=${benefit.id})}" method="post">
+
+        <p>
+            중위소득
+            <input type="number" name="maxPercent" placeholder="예: 150" min="0" style="width:100px;">
+            % 이하인 사람만 신청 가능
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="required" value="true" checked>
+                필수 조건입니다
+            </label>
+        </p>
+
+        <button type="submit">중위소득 조건 등록</button>
+    </form>
+</div>
+
+<!-- ④ 취업/학생/자가보유 조건 -->
+<div style="border:1px solid #ddd; padding:12px; margin-bottom:12px;">
+    <h4>④ 취업 / 학생 / 자가보유 조건</h4>
+
+    <form th:action="@{/admin/benefits/{id}/conditions/boolean(id=${benefit.id})}" method="post">
+
+        <p>
+            항목:
+            <select name="fieldName" required>
+                <option value="employed">취업 여부</option>
+                <option value="student">학생 여부</option>
+                <option value="houseOwner">자가 보유 여부</option>
+            </select>
+        </p>
+
+        <p>
+            조건:
+            <label>
+                <input type="radio" name="value" value="true" checked> O (해당해야 함)
+            </label>
+            <label>
+                <input type="radio" name="value" value="false"> X (해당하지 않아야 함)
+            </label>
+        </p>
+
+        <p>
+            <label>
+                <input type="checkbox" name="required" value="true" checked>
+                필수 조건입니다
+            </label>
+        </p>
+
+        <button type="submit">조건 등록</button>
+    </form>
+</div>
 
 <hr>
 
-<h3>정책 조건</h3>
+<h3>등록된 조건 목록</h3>
 
 <table border="1">
     <tr>
-        <th>필드명</th>
-        <th>연산자</th>
-        <th>기준값</th>
-        <th>필수 여부</th>
+        <th>조건 항목</th>
+        <th>연산</th>
+        <th>기준</th>
         <th>삭제</th>
     </tr>
 
@@ -187,7 +289,6 @@
         <td th:text="${condition.fieldName}"></td>
         <td th:text="${condition.operator}"></td>
         <td th:text="${condition.value}"></td>
-        <td th:text="${condition.required}"></td>
         <td>
             <form th:action="@{/admin/benefits/{benefitId}/conditions/delete/{conditionId}(benefitId=${benefit.id}, conditionId=${condition.id})}"
                   method="post">

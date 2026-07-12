@@ -1,6 +1,7 @@
 package com.taehyun.youthpolicyplatform.calendar.controller;
 
 import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
+import com.taehyun.youthpolicyplatform.benefit.service.BenefitCategoryService;
 import com.taehyun.youthpolicyplatform.benefit.service.BenefitService;
 import com.taehyun.youthpolicyplatform.bookmark.domain.Bookmark;
 import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
@@ -9,23 +10,23 @@ import com.taehyun.youthpolicyplatform.calendar.util.CalendarEventUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.taehyun.youthpolicyplatform.benefit.service.BenefitCategoryService;
-import org.springframework.ui.Model;
 
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequiredArgsConstructor
 public class CalendarController {
 
-    private final BenefitCategoryService benefitCategoryService;
     private final BenefitService benefitService;
     private final BookmarkService bookmarkService;
+    private final BenefitCategoryService benefitCategoryService;
 
-    // ① 전체 캘린더 "화면"을 보여주는 메서드 (빈 달력 틀만 그려줌)
+    // ① 전체 캘린더 "화면"을 보여주는 메서드
     @GetMapping("/calendar")
     public String calendarPage(Model model) {
 
@@ -51,6 +52,7 @@ public class CalendarController {
                 )
                 .flatMap(benefit -> benefit.getSchedules().stream())
                 .map(CalendarEventUtil::convert)
+                .filter(Objects::nonNull) // 상시 신청 건(null)은 날짜가 없으므로 캘린더에서 제외
                 .toList();
     }
 
@@ -83,6 +85,7 @@ public class CalendarController {
                 .map(Bookmark::getBenefit)
                 .flatMap(benefit -> benefit.getSchedules().stream())
                 .map(CalendarEventUtil::convert)
+                .filter(Objects::nonNull) // 상시 신청 건(null)은 날짜가 없으므로 캘린더에서 제외
                 .toList();
     }
 }
