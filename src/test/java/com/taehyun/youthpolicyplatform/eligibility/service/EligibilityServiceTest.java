@@ -120,6 +120,112 @@ class EligibilityServiceTest {
                 .allMatch(condition -> condition.isPassed());
     }
 
+    @Test
+    void returnsEligibleWhenRegionIsInList() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "IN", "서울,경기,인천")
+        );
+        UserProfile profile = profileWithAddress("경기도 수원시");
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+        assertThat(result.getConditionResults().getFirst().isPassed()).isTrue();
+    }
+
+    @Test
+    void returnsIneligibleWhenRegionIsNotInList() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "IN", "서울,부산")
+        );
+        UserProfile profile = profileWithAddress("경기도 수원시");
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.INELIGIBLE);
+        assertThat(result.getConditionResults().getFirst().isPassed()).isFalse();
+    }
+
+    @Test
+    void returnsEligibleWhenRegionIsNotInExcludedList() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "NOT_IN", "서울,부산")
+        );
+        UserProfile profile = profileWithAddress("경기도 수원시");
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+        assertThat(result.getConditionResults().getFirst().isPassed()).isTrue();
+    }
+
+    @Test
+    void returnsIneligibleWhenRegionIsInExcludedList() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "NOT_IN", "서울,경기")
+        );
+        UserProfile profile = profileWithAddress("경기도 수원시");
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.INELIGIBLE);
+        assertThat(result.getConditionResults().getFirst().isPassed()).isFalse();
+    }
+
+    @Test
+    void trimsWhitespaceInRegionList() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "IN", "서울, 경기, 인천")
+        );
+        UserProfile profile = profileWithAddress("인천광역시 남동구");
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void returnsNeedMoreInfoWhenRegionIsMissingForRequiredInCondition() {
+        Benefit benefit = benefitWithConditions(
+                condition("region", "IN", "서울,경기,인천")
+        );
+        UserProfile profile = profileWithAddress(null);
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+        assertThat(result.getConditionResults().getFirst().getStatus())
+                .isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+    }
+
+    @Test
+    void returnsIneligibleWithoutExceptionForInvalidRegionConditions() {
+        String[][] invalidConditions = {
+                {"IN", ""},
+                {"IN", ",,,"},
+                {"NOT_IN", "   "},
+                {"UNSUPPORTED", "서울"}
+        };
+
+        for (String[] invalidCondition : invalidConditions) {
+            Benefit benefit = benefitWithConditions(
+                    condition("region", invalidCondition[0], invalidCondition[1])
+            );
+            UserProfile profile = profileWithAddress("경기도 수원시");
+            prepareRepositories(benefit, profile);
+
+            EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+            assertThat(result.getStatus()).isEqualTo(EligibilityStatus.INELIGIBLE);
+        }
+    }
+
     private Benefit benefitWithConditions(BenefitCondition... conditions) {
         Benefit benefit = new Benefit(
                 "청년 지원 정책",
@@ -140,10 +246,18 @@ class EligibilityServiceTest {
         return profileWithEmployed(true);
     }
 
+    private UserProfile profileWithAddress(String address) {
+        return profileWithAddressAndEmployed(address, true);
+    }
+
     private UserProfile profileWithEmployed(Boolean employed) {
+        return profileWithAddressAndEmployed("서울특별시 마포구", employed);
+    }
+
+    private UserProfile profileWithAddressAndEmployed(String address, Boolean employed) {
         return new UserProfile(
                 26,
-                "서울특별시 마포구",
+                address,
                 1,
                 1_800_000,
                 21_600_000,

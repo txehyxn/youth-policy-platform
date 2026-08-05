@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -97,7 +98,9 @@ public class EligibilityService {
             UserProfile profile,
             BenefitCondition condition
     ) {
-        if (isUserValueMissing(profile, condition.getFieldName().trim())) {
+        String fieldName = trimToEmpty(condition.getFieldName());
+
+        if (isUserValueMissing(profile, fieldName)) {
             return EligibilityStatus.NEED_MORE_INFO;
         }
 
@@ -123,9 +126,13 @@ public class EligibilityService {
 
     private boolean checkCondition(UserProfile profile, BenefitCondition condition) {
 
-        String fieldName = condition.getFieldName().trim();
-        String operator = condition.getOperator().trim();
-        String value = condition.getValue().trim();
+        String fieldName = trimToEmpty(condition.getFieldName());
+        String operator = trimToEmpty(condition.getOperator());
+        String value = trimToEmpty(condition.getValue());
+
+        if (fieldName.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+            return false;
+        }
 
         return switch (fieldName) {
             case "age" -> compareNumber(profile.getAge(), operator, value);
@@ -143,7 +150,7 @@ public class EligibilityService {
 
     private String createUserValueLabel(UserProfile profile, BenefitCondition condition) {
 
-        String fieldName = condition.getFieldName().trim();
+        String fieldName = trimToEmpty(condition.getFieldName());
 
         return switch (fieldName) {
             case "age" -> profile.getAge() == null ? "미입력" : profile.getAge() + "세";
@@ -171,7 +178,7 @@ public class EligibilityService {
             BenefitCondition condition,
             EligibilityStatus status
     ) {
-        String fieldName = condition.getFieldName().trim();
+        String fieldName = trimToEmpty(condition.getFieldName());
 
         if (status == EligibilityStatus.NEED_MORE_INFO) {
             return createMissingValueMessage(fieldName);
@@ -226,7 +233,13 @@ public class EligibilityService {
     }
 
     private boolean compareNumber(Integer userValue, String operator, String value) {
-        int conditionValue = Integer.parseInt(value);
+        int conditionValue;
+
+        try {
+            conditionValue = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return false;
+        }
 
         return switch (operator) {
             case ">=" -> userValue >= conditionValue;
@@ -242,13 +255,40 @@ public class EligibilityService {
     private boolean compareAddress(String address, String operator, String conditionValue) {
 
         String normalizedAddress = normalizeRegion(address);
-        String normalizedConditionValue = normalizeRegion(conditionValue);
 
         return switch (operator) {
-            case "=", "==" -> normalizedAddress.contains(normalizedConditionValue);
-            case "!=" -> !normalizedAddress.contains(normalizedConditionValue);
+            case "=", "==" -> matchesRegion(normalizedAddress, conditionValue);
+            case "!=" -> !matchesRegion(normalizedAddress, conditionValue);
+            case "IN" -> compareRegionList(normalizedAddress, conditionValue, true);
+            case "NOT_IN" -> compareRegionList(normalizedAddress, conditionValue, false);
             default -> false;
         };
+    }
+
+    private boolean compareRegionList(
+            String normalizedAddress,
+            String conditionValue,
+            boolean expectedToMatch
+    ) {
+        List<String> regions = Arrays.stream(conditionValue.split(","))
+                .map(String::trim)
+                .filter(region -> !region.isEmpty())
+                .toList();
+
+        if (regions.isEmpty()) {
+            return false;
+        }
+
+        boolean matched = regions.stream()
+                .anyMatch(region -> matchesRegion(normalizedAddress, region));
+
+        return expectedToMatch == matched;
+    }
+
+    private boolean matchesRegion(String normalizedAddress, String region) {
+        String normalizedRegion = normalizeRegion(region.trim());
+        return !normalizedRegion.isEmpty()
+                && normalizedAddress.contains(normalizedRegion);
     }
 
     private String normalizeRegion(String value) {
@@ -278,6 +318,10 @@ public class EligibilityService {
     }
 
     private boolean compareBoolean(Boolean userValue, String operator, String value) {
+        if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
+            return false;
+        }
+
         Boolean conditionValue = Boolean.parseBoolean(value);
 
         return switch (operator) {
@@ -285,5 +329,9 @@ public class EligibilityService {
             case "!=" -> !userValue.equals(conditionValue);
             default -> false;
         };
+    }
+
+    private String trimToEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 }

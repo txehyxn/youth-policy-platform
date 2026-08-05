@@ -7,9 +7,9 @@ public class ConditionDisplayUtil {
 
     public static ConditionDisplayDto convert(BenefitCondition condition) {
 
-        String fieldName = condition.getFieldName().trim();
-        String operator = condition.getOperator().trim();
-        String value = condition.getValue().trim();
+        String fieldName = trimToEmpty(condition.getFieldName());
+        String operator = trimToEmpty(condition.getOperator());
+        String value = trimToEmpty(condition.getValue());
 
         String fieldLabel = convertField(fieldName);
         String operatorLabel = convertOperator(fieldName, operator);
@@ -42,7 +42,11 @@ public class ConditionDisplayUtil {
     private static String convertOperator(String fieldName, String operator) {
 
         if (fieldName.equals("region") || fieldName.equals("address")) {
-            return "";
+            return switch (operator) {
+                case "IN" -> "중 하나";
+                case "NOT_IN" -> "제외";
+                default -> "";
+            };
         }
 
         return switch (operator) {
@@ -65,5 +69,9 @@ public class ConditionDisplayUtil {
             case "houseOwner" -> value.equals("true") ? "주택 보유" : "무주택";
             default -> value;
         };
+    }
+
+    private static String trimToEmpty(String value) {
+        return value == null ? "" : value.trim();
     }
 }
