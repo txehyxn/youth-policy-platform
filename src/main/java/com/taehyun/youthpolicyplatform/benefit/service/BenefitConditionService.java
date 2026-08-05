@@ -4,6 +4,7 @@ import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
 import com.taehyun.youthpolicyplatform.benefit.domain.BenefitCondition;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitConditionRepository;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
+import com.taehyun.youthpolicyplatform.user.domain.ProfileField;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class BenefitConditionService {
             Boolean required
     ) {
         Benefit benefit = findBenefit(benefitId);
+        validateProfileField(fieldName);
 
         BenefitCondition condition = new BenefitCondition(
                 fieldName,
@@ -102,6 +104,7 @@ public class BenefitConditionService {
             Boolean required
     ) {
         Benefit benefit = findBenefit(benefitId);
+        validateProfileField(fieldName);
 
         benefitConditionRepository.save(
                 new BenefitCondition(fieldName, "==", value.toString(), required, benefit)
@@ -116,6 +119,11 @@ public class BenefitConditionService {
 
     public void delete(Long id) {
         benefitConditionRepository.deleteById(id);
+    }
+
+    private void validateProfileField(String fieldName) {
+        ProfileField.fromKey(fieldName)
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 프로필 조건 필드입니다."));
     }
 
     private Benefit findBenefit(Long benefitId) {

@@ -5,12 +5,16 @@ import com.taehyun.youthpolicyplatform.benefit.domain.BenefitCondition;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
+import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -255,6 +259,156 @@ class EligibilityServiceTest {
         verifyNoInteractions(benefitRepository, userProfileRepository);
     }
 
+    @Test
+    void usesBirthDateBasedAgeBeforeLegacyAge() {
+        Benefit benefit = benefitWithConditions(condition("age", "==", "26"));
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        ReflectionTestUtils.setField(profile, "age", 40);
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void returnsNeedMoreInfoWhenBirthDateAndLegacyAgeAreMissing() {
+        Benefit benefit = benefitWithConditions(condition("age", ">=", "19"));
+        UserProfile profile = newProfile(
+                null, 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+    }
+
+    @Test
+    void returnsNeedMoreInfoWhenEmploymentStatusIsMissing() {
+        Benefit benefit = benefitWithConditions(
+                condition("employmentStatus", "==", "EMPLOYED")
+        );
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                null,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+    }
+
+    @Test
+    void comparesEmploymentStatusEnumWithListOperator() {
+        Benefit benefit = benefitWithConditions(
+                condition("employmentStatus", "IN", "UNEMPLOYED, EMPLOYED")
+        );
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void comparesHousingOwnershipStatusEnum() {
+        Benefit benefit = benefitWithConditions(
+                condition("housingOwnershipStatus", "==", "NO_HOME")
+        );
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void comparesEducationStatusEnum() {
+        Benefit benefit = benefitWithConditions(
+                condition("educationStatus", "IN", "UNIVERSITY_ENROLLED, EXPECTED_GRADUATION")
+        );
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(22), 0L,
+                EmploymentStatus.NOT_ECONOMICALLY_ACTIVE,
+                EducationStatus.UNIVERSITY_ENROLLED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void distinguishesZeroIncomeFromMissingIncome() {
+        Benefit benefit = benefitWithConditions(
+                condition("monthlyEarnedIncome", "==", "0")
+        );
+        UserProfile zeroIncomeProfile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.UNEMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, zeroIncomeProfile);
+
+        EligibilityResultDto zeroIncomeResult = eligibilityService.check(1L, 1L);
+
+        UserProfile missingIncomeProfile = newProfile(
+                LocalDate.now().minusYears(26), null,
+                EmploymentStatus.UNEMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, missingIncomeProfile);
+        EligibilityResultDto missingIncomeResult = eligibilityService.check(1L, 1L);
+
+        assertThat(zeroIncomeResult.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+        assertThat(missingIncomeResult.getStatus()).isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+    }
+
+    @Test
+    void keepsLegacyAgeRegionAndBooleanConditionsCompatible() {
+        Benefit benefit = benefitWithConditions(
+                condition("age", "==", "26"),
+                condition("region", "IN", "서울,경기"),
+                condition("employed", "==", "true"),
+                condition("student", "==", "false"),
+                condition("houseOwner", "==", "false")
+        );
+        UserProfile profile = profileWithAddressAndEmployed("서울특별시 마포구", true);
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
     private Benefit benefitWithConditions(BenefitCondition... conditions) {
         Benefit benefit = new Benefit(
                 "청년 지원 정책",
@@ -294,6 +448,28 @@ class EligibilityServiceTest {
                 employed,
                 false,
                 false,
+                null
+        );
+    }
+
+    private UserProfile newProfile(
+            LocalDate birthDate,
+            Long monthlyEarnedIncome,
+            EmploymentStatus employmentStatus,
+            EducationStatus educationStatus,
+            HousingOwnershipStatus housingOwnershipStatus
+    ) {
+        return new UserProfile(
+                birthDate,
+                "11",
+                1,
+                monthlyEarnedIncome,
+                0L,
+                0L,
+                0,
+                employmentStatus,
+                educationStatus,
+                housingOwnershipStatus,
                 null
         );
     }

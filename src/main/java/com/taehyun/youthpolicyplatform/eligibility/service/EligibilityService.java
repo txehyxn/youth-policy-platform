@@ -8,6 +8,7 @@ import com.taehyun.youthpolicyplatform.benefit.util.ConditionDisplayUtil;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityConditionResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
+import com.taehyun.youthpolicyplatform.user.domain.ProfileField;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -133,17 +134,30 @@ public class EligibilityService {
     }
 
     private boolean isUserValueMissing(UserProfile profile, String fieldName) {
-        return switch (fieldName) {
-            case "age" -> profile.getAge() == null;
-            case "householdSize" -> profile.getHouseholdSize() == null;
-            case "monthlyIncome" -> profile.getMonthlyIncome() == null;
-            case "annualIncome" -> profile.getAnnualIncome() == null;
-            case "middleIncomePercent" -> profile.getMiddleIncomePercent() == null;
-            case "region" -> profile.getAddress() == null || profile.getAddress().isBlank();
-            case "employed" -> profile.getEmployed() == null;
-            case "student" -> profile.getStudent() == null;
-            case "houseOwner" -> profile.getHouseOwner() == null;
-            default -> false;
+        ProfileField profileField = ProfileField.fromKey(fieldName).orElse(null);
+
+        if (profileField == null) {
+            return false;
+        }
+
+        return switch (profileField) {
+            case BIRTH_DATE -> profile.getBirthDate() == null;
+            case AGE -> profile.getEligibilityAge() == null;
+            case REGION -> isBlank(profile.getRegionCode()) && isBlank(profile.getAddress());
+            case HOUSEHOLD_SIZE -> profile.getHouseholdSize() == null;
+            case MONTHLY_EARNED_INCOME -> profile.getEligibilityMonthlyEarnedIncome() == null;
+            case ANNUAL_PERSONAL_INCOME -> profile.getEligibilityAnnualPersonalIncome() == null;
+            case HOUSEHOLD_MONTHLY_INCOME -> profile.getHouseholdMonthlyIncome() == null;
+            case MIDDLE_INCOME_PERCENT -> profile.getMiddleIncomePercent() == null;
+            case EMPLOYMENT_STATUS -> isLegacyKey(fieldName, "employed")
+                    ? profile.getEligibilityEmployed() == null
+                    : profile.getEligibilityEmploymentStatus() == null;
+            case EDUCATION_STATUS -> isLegacyKey(fieldName, "student")
+                    ? profile.getEligibilityStudent() == null
+                    : profile.getEligibilityEducationStatus() == null;
+            case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
+                    ? profile.getEligibilityHouseOwner() == null
+                    : profile.getEligibilityHousingOwnershipStatus() == null;
         };
     }
 
@@ -157,43 +171,76 @@ public class EligibilityService {
             return false;
         }
 
-        return switch (fieldName) {
-            case "age" -> compareNumber(profile.getAge(), operator, value);
-            case "householdSize" -> compareNumber(profile.getHouseholdSize(), operator, value);
-            case "monthlyIncome" -> compareNumber(profile.getMonthlyIncome(), operator, value);
-            case "annualIncome" -> compareNumber(profile.getAnnualIncome(), operator, value);
-            case "middleIncomePercent" -> compareNumber(profile.getMiddleIncomePercent(), operator, value);
-            case "region" -> compareAddress(profile.getAddress(), operator, value);
-            case "employed" -> compareBoolean(profile.getEmployed(), operator, value);
-            case "student" -> compareBoolean(profile.getStudent(), operator, value);
-            case "houseOwner" -> compareBoolean(profile.getHouseOwner(), operator, value);
-            default -> false;
+        ProfileField profileField = ProfileField.fromKey(fieldName).orElse(null);
+
+        if (profileField == null) {
+            return false;
+        }
+
+        return switch (profileField) {
+            case BIRTH_DATE -> false;
+            case AGE -> compareNumber(profile.getEligibilityAge(), operator, value);
+            case REGION -> compareProfileRegion(profile, operator, value);
+            case HOUSEHOLD_SIZE -> compareNumber(profile.getHouseholdSize(), operator, value);
+            case MONTHLY_EARNED_INCOME -> compareNumber(
+                    profile.getEligibilityMonthlyEarnedIncome(), operator, value
+            );
+            case ANNUAL_PERSONAL_INCOME -> compareNumber(
+                    profile.getEligibilityAnnualPersonalIncome(), operator, value
+            );
+            case HOUSEHOLD_MONTHLY_INCOME -> compareNumber(
+                    profile.getHouseholdMonthlyIncome(), operator, value
+            );
+            case MIDDLE_INCOME_PERCENT -> compareNumber(
+                    profile.getMiddleIncomePercent(), operator, value
+            );
+            case EMPLOYMENT_STATUS -> isLegacyKey(fieldName, "employed")
+                    ? compareBoolean(profile.getEligibilityEmployed(), operator, value)
+                    : compareEnum(profile.getEligibilityEmploymentStatus(), operator, value);
+            case EDUCATION_STATUS -> isLegacyKey(fieldName, "student")
+                    ? compareBoolean(profile.getEligibilityStudent(), operator, value)
+                    : compareEnum(profile.getEligibilityEducationStatus(), operator, value);
+            case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
+                    ? compareBoolean(profile.getEligibilityHouseOwner(), operator, value)
+                    : compareEnum(profile.getEligibilityHousingOwnershipStatus(), operator, value);
         };
     }
 
     private String createUserValueLabel(UserProfile profile, BenefitCondition condition) {
 
         String fieldName = trimToEmpty(condition.getFieldName());
+        ProfileField profileField = ProfileField.fromKey(fieldName).orElse(null);
 
-        return switch (fieldName) {
-            case "age" -> profile.getAge() == null ? "미입력" : profile.getAge() + "세";
-            case "region" -> profile.getAddress() == null || profile.getAddress().isBlank()
-                    ? "미입력" : profile.getAddress();
-            case "householdSize" -> profile.getHouseholdSize() == null
-                    ? "미입력" : profile.getHouseholdSize() + "명";
-            case "monthlyIncome" -> profile.getMonthlyIncome() == null
-                    ? "미입력" : profile.getMonthlyIncome() + "원";
-            case "annualIncome" -> profile.getAnnualIncome() == null
-                    ? "미입력" : profile.getAnnualIncome() + "원";
-            case "middleIncomePercent" -> profile.getMiddleIncomePercent() == null
-                    ? "미입력" : profile.getMiddleIncomePercent() + "%";
-            case "employed" -> profile.getEmployed() == null
-                    ? "미입력" : profile.getEmployed() ? "예" : "아니오";
-            case "student" -> profile.getStudent() == null
-                    ? "미입력" : profile.getStudent() ? "예" : "아니오";
-            case "houseOwner" -> profile.getHouseOwner() == null
-                    ? "미입력" : profile.getHouseOwner() ? "주택 보유" : "무주택";
-            default -> "-";
+        if (profileField == null) {
+            return "-";
+        }
+
+        return switch (profileField) {
+            case BIRTH_DATE -> valueOrMissing(profile.getBirthDate());
+            case AGE -> valueOrMissing(profile.getEligibilityAge(), "세");
+            case REGION -> valueOrMissing(resolveRegionLabel(profile));
+            case HOUSEHOLD_SIZE -> valueOrMissing(profile.getHouseholdSize(), "명");
+            case MONTHLY_EARNED_INCOME -> valueOrMissing(
+                    profile.getEligibilityMonthlyEarnedIncome(), "원"
+            );
+            case ANNUAL_PERSONAL_INCOME -> valueOrMissing(
+                    profile.getEligibilityAnnualPersonalIncome(), "원"
+            );
+            case HOUSEHOLD_MONTHLY_INCOME -> valueOrMissing(
+                    profile.getHouseholdMonthlyIncome(), "원"
+            );
+            case MIDDLE_INCOME_PERCENT -> valueOrMissing(
+                    profile.getMiddleIncomePercent(), "%"
+            );
+            case EMPLOYMENT_STATUS -> isLegacyKey(fieldName, "employed")
+                    ? booleanLabel(profile.getEligibilityEmployed(), "예", "아니오")
+                    : enumLabel(profile.getEligibilityEmploymentStatus());
+            case EDUCATION_STATUS -> isLegacyKey(fieldName, "student")
+                    ? booleanLabel(profile.getEligibilityStudent(), "예", "아니오")
+                    : enumLabel(profile.getEligibilityEducationStatus());
+            case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
+                    ? booleanLabel(profile.getEligibilityHouseOwner(), "주택 보유", "무주택")
+                    : enumLabel(profile.getEligibilityHousingOwnershipStatus());
         };
     }
 
@@ -212,65 +259,126 @@ public class EligibilityService {
         }
 
         return switch (fieldName) {
+            case "birthDate" -> "생년월일 조건을 충족하지 않습니다.";
             case "age" -> "나이 조건을 충족하지 않습니다.";
-            case "region" -> "거주지역 조건을 충족하지 않습니다.";
+            case "region", "address" -> "거주지역 조건을 충족하지 않습니다.";
             case "householdSize" -> "가구원 수 조건을 충족하지 않습니다.";
-            case "monthlyIncome" -> "월 소득 조건을 충족하지 않습니다.";
-            case "annualIncome" -> "연 소득 조건을 충족하지 않습니다.";
+            case "monthlyIncome", "monthlyEarnedIncome" -> "월 소득 조건을 충족하지 않습니다.";
+            case "annualIncome", "annualPersonalIncome" -> "연 소득 조건을 충족하지 않습니다.";
+            case "householdMonthlyIncome" -> "가구 월소득 조건을 충족하지 않습니다.";
             case "middleIncomePercent" -> "중위소득 기준을 충족하지 않습니다.";
             case "employed" -> "취업 여부 조건을 충족하지 않습니다.";
+            case "employmentStatus" -> "취업 상태 조건을 충족하지 않습니다.";
             case "student" -> "학생 여부 조건을 충족하지 않습니다.";
+            case "educationStatus" -> "학적 상태 조건을 충족하지 않습니다.";
             case "houseOwner" -> "주택 보유 여부 조건을 충족하지 않습니다.";
+            case "housingOwnershipStatus" -> "주택 소유 상태 조건을 충족하지 않습니다.";
             default -> "조건을 충족하지 않습니다.";
         };
     }
 
     private String createSatisfiedMessage(String fieldName) {
         return switch (fieldName) {
+            case "birthDate" -> "생년월일 조건을 충족했습니다.";
             case "age" -> "나이 조건을 충족했습니다.";
-            case "region" -> "거주지역 조건을 충족했습니다.";
+            case "region", "address" -> "거주지역 조건을 충족했습니다.";
             case "householdSize" -> "가구원 수 조건을 충족했습니다.";
-            case "monthlyIncome" -> "월 소득 조건을 충족했습니다.";
-            case "annualIncome" -> "연 소득 조건을 충족했습니다.";
+            case "monthlyIncome", "monthlyEarnedIncome" -> "월 소득 조건을 충족했습니다.";
+            case "annualIncome", "annualPersonalIncome" -> "연 소득 조건을 충족했습니다.";
+            case "householdMonthlyIncome" -> "가구 월소득 조건을 충족했습니다.";
             case "middleIncomePercent" -> "중위소득 기준을 충족했습니다.";
             case "employed" -> "취업 여부 조건을 충족했습니다.";
+            case "employmentStatus" -> "취업 상태 조건을 충족했습니다.";
             case "student" -> "학생 여부 조건을 충족했습니다.";
+            case "educationStatus" -> "학적 상태 조건을 충족했습니다.";
             case "houseOwner" -> "주택 보유 여부 조건을 충족했습니다.";
+            case "housingOwnershipStatus" -> "주택 소유 상태 조건을 충족했습니다.";
             default -> "조건을 충족했습니다.";
         };
     }
 
     private String createMissingValueMessage(String fieldName) {
         return switch (fieldName) {
+            case "birthDate" -> "생년월일 정보가 없어 확인이 필요합니다.";
             case "age" -> "나이 정보가 없어 확인이 필요합니다.";
-            case "region" -> "거주지역 정보가 없어 확인이 필요합니다.";
+            case "region", "address" -> "거주지역 정보가 없어 확인이 필요합니다.";
             case "householdSize" -> "가구원 수 정보가 없어 확인이 필요합니다.";
-            case "monthlyIncome" -> "월 소득 정보가 없어 확인이 필요합니다.";
-            case "annualIncome" -> "연 소득 정보가 없어 확인이 필요합니다.";
+            case "monthlyIncome", "monthlyEarnedIncome" -> "월 소득 정보가 없어 확인이 필요합니다.";
+            case "annualIncome", "annualPersonalIncome" -> "연 소득 정보가 없어 확인이 필요합니다.";
+            case "householdMonthlyIncome" -> "가구 월소득 정보가 없어 확인이 필요합니다.";
             case "middleIncomePercent" -> "중위소득 정보가 없어 확인이 필요합니다.";
             case "employed" -> "취업 여부 정보가 없어 확인이 필요합니다.";
+            case "employmentStatus" -> "취업 상태 정보가 없어 확인이 필요합니다.";
             case "student" -> "학생 여부 정보가 없어 확인이 필요합니다.";
+            case "educationStatus" -> "학적 상태 정보가 없어 확인이 필요합니다.";
             case "houseOwner" -> "주택 보유 여부 정보가 없어 확인이 필요합니다.";
+            case "housingOwnershipStatus" -> "주택 소유 상태 정보가 없어 확인이 필요합니다.";
             default -> "사용자 정보가 없어 확인이 필요합니다.";
         };
     }
 
-    private boolean compareNumber(Integer userValue, String operator, String value) {
-        int conditionValue;
+    private boolean compareNumber(Number userValue, String operator, String value) {
+        long conditionValue;
 
         try {
-            conditionValue = Integer.parseInt(value);
+            conditionValue = Long.parseLong(value);
         } catch (NumberFormatException e) {
             return false;
         }
 
+        long numericUserValue = userValue.longValue();
+
         return switch (operator) {
-            case ">=" -> userValue >= conditionValue;
-            case "<=" -> userValue <= conditionValue;
-            case ">" -> userValue > conditionValue;
-            case "<" -> userValue < conditionValue;
-            case "=", "==" -> userValue.equals(conditionValue);
-            case "!=" -> !userValue.equals(conditionValue);
+            case ">=" -> numericUserValue >= conditionValue;
+            case "<=" -> numericUserValue <= conditionValue;
+            case ">" -> numericUserValue > conditionValue;
+            case "<" -> numericUserValue < conditionValue;
+            case "=", "==" -> numericUserValue == conditionValue;
+            case "!=" -> numericUserValue != conditionValue;
+            default -> false;
+        };
+    }
+
+    private boolean compareProfileRegion(
+            UserProfile profile,
+            String operator,
+            String conditionValue
+    ) {
+        List<String> regionValues = new ArrayList<>();
+
+        if (!isBlank(profile.getRegionCode())) {
+            regionValues.add(profile.getRegionCode());
+        }
+        if (!isBlank(profile.getAddress())
+                && !regionValues.contains(profile.getAddress())) {
+            regionValues.add(profile.getAddress());
+        }
+
+        if (operator.equals("!=") || operator.equals("NOT_IN")) {
+            return regionValues.stream()
+                    .allMatch(region -> compareAddress(region, operator, conditionValue));
+        }
+
+        return regionValues.stream()
+                .anyMatch(region -> compareAddress(region, operator, conditionValue));
+    }
+
+    private boolean compareEnum(Enum<?> userValue, String operator, String value) {
+        List<String> conditionValues = Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(conditionValue -> !conditionValue.isEmpty())
+                .toList();
+
+        if (conditionValues.isEmpty()) {
+            return false;
+        }
+
+        boolean matched = conditionValues.stream()
+                .anyMatch(conditionValue -> userValue.name().equalsIgnoreCase(conditionValue));
+
+        return switch (operator) {
+            case "=", "==", "IN" -> matched;
+            case "!=", "NOT_IN" -> !matched;
             default -> false;
         };
     }
@@ -352,6 +460,40 @@ public class EligibilityService {
             case "!=" -> !userValue.equals(conditionValue);
             default -> false;
         };
+    }
+
+    private String resolveRegionLabel(UserProfile profile) {
+        if (!isBlank(profile.getRegionCode())) {
+            return profile.getRegionCode();
+        }
+        return profile.getAddress();
+    }
+
+    private String valueOrMissing(Object value) {
+        return value == null ? "미입력" : value.toString();
+    }
+
+    private String valueOrMissing(Number value, String suffix) {
+        return value == null ? "미입력" : value + suffix;
+    }
+
+    private String booleanLabel(Boolean value, String trueLabel, String falseLabel) {
+        if (value == null) {
+            return "미입력";
+        }
+        return value ? trueLabel : falseLabel;
+    }
+
+    private String enumLabel(Enum<?> value) {
+        return value == null ? "미입력" : value.name();
+    }
+
+    private boolean isLegacyKey(String actualKey, String legacyKey) {
+        return legacyKey.equalsIgnoreCase(trimToEmpty(actualKey));
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private String trimToEmpty(String value) {

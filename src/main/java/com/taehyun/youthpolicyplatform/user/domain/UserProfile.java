@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 // 정책 판별에 공통적으로 사용되는 사용자 기본 조건 정보
 @Getter
 @NoArgsConstructor
@@ -42,6 +45,26 @@ public class UserProfile {
     // 자가 보유 여부
     private Boolean houseOwner;
 
+    // 실시간 정책 판정을 위한 1차 핵심 프로필 필드. null은 아직 입력하지 않은 상태다.
+    private LocalDate birthDate;
+
+    private String regionCode;
+
+    private Long monthlyEarnedIncome;
+
+    private Long annualPersonalIncome;
+
+    private Long householdMonthlyIncome;
+
+    @Enumerated(EnumType.STRING)
+    private EmploymentStatus employmentStatus;
+
+    @Enumerated(EnumType.STRING)
+    private EducationStatus educationStatus;
+
+    @Enumerated(EnumType.STRING)
+    private HousingOwnershipStatus housingOwnershipStatus;
+
     // 해당 프로필을 작성한 회원
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -72,6 +95,32 @@ public class UserProfile {
         this.user = user;
     }
 
+    public UserProfile(
+            LocalDate birthDate,
+            String regionCode,
+            Integer householdSize,
+            Long monthlyEarnedIncome,
+            Long annualPersonalIncome,
+            Long householdMonthlyIncome,
+            Integer middleIncomePercent,
+            EmploymentStatus employmentStatus,
+            EducationStatus educationStatus,
+            HousingOwnershipStatus housingOwnershipStatus,
+            User user
+    ) {
+        this.birthDate = birthDate;
+        this.regionCode = regionCode;
+        this.householdSize = householdSize;
+        this.monthlyEarnedIncome = monthlyEarnedIncome;
+        this.annualPersonalIncome = annualPersonalIncome;
+        this.householdMonthlyIncome = householdMonthlyIncome;
+        this.middleIncomePercent = middleIncomePercent;
+        this.employmentStatus = employmentStatus;
+        this.educationStatus = educationStatus;
+        this.housingOwnershipStatus = housingOwnershipStatus;
+        this.user = user;
+    }
+
     // 사용자 프로필 수정
     public void update(
             Integer age,
@@ -93,5 +142,83 @@ public class UserProfile {
         this.employed = employed;
         this.student = student;
         this.houseOwner = houseOwner;
+    }
+
+    public Integer getEligibilityAge() {
+        if (birthDate != null) {
+            return Period.between(birthDate, LocalDate.now()).getYears();
+        }
+        return age;
+    }
+
+    public Long getEligibilityMonthlyEarnedIncome() {
+        if (monthlyEarnedIncome != null) {
+            return monthlyEarnedIncome;
+        }
+        return monthlyIncome == null ? null : monthlyIncome.longValue();
+    }
+
+    public Long getEligibilityAnnualPersonalIncome() {
+        if (annualPersonalIncome != null) {
+            return annualPersonalIncome;
+        }
+        return annualIncome == null ? null : annualIncome.longValue();
+    }
+
+    public EmploymentStatus getEligibilityEmploymentStatus() {
+        if (employmentStatus != null) {
+            return employmentStatus;
+        }
+        if (employed == null) {
+            return null;
+        }
+        return employed ? EmploymentStatus.EMPLOYED : EmploymentStatus.UNEMPLOYED;
+    }
+
+    public Boolean getEligibilityEmployed() {
+        if (employmentStatus != null) {
+            return employmentStatus == EmploymentStatus.EMPLOYED
+                    || employmentStatus == EmploymentStatus.SELF_EMPLOYED;
+        }
+        return employed;
+    }
+
+    public EducationStatus getEligibilityEducationStatus() {
+        if (educationStatus != null) {
+            return educationStatus;
+        }
+        if (Boolean.TRUE.equals(student)) {
+            return EducationStatus.UNIVERSITY_ENROLLED;
+        }
+        return null;
+    }
+
+    public Boolean getEligibilityStudent() {
+        if (educationStatus != null) {
+            return educationStatus == EducationStatus.HIGH_SCHOOL_STUDENT
+                    || educationStatus == EducationStatus.UNIVERSITY_ENROLLED
+                    || educationStatus == EducationStatus.LEAVE_OF_ABSENCE
+                    || educationStatus == EducationStatus.EXPECTED_GRADUATION;
+        }
+        return student;
+    }
+
+    public HousingOwnershipStatus getEligibilityHousingOwnershipStatus() {
+        if (housingOwnershipStatus != null) {
+            return housingOwnershipStatus;
+        }
+        if (houseOwner == null) {
+            return null;
+        }
+        return houseOwner
+                ? HousingOwnershipStatus.APPLICANT_OWNS
+                : HousingOwnershipStatus.NO_HOME;
+    }
+
+    public Boolean getEligibilityHouseOwner() {
+        if (housingOwnershipStatus != null) {
+            return housingOwnershipStatus != HousingOwnershipStatus.NO_HOME;
+        }
+        return houseOwner;
     }
 }
