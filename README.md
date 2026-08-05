@@ -124,6 +124,30 @@
 
 ---
 
+## 로컬 실행 설정
+
+애플리케이션 실행 전 MySQL에 `youth_policy_platform` 데이터베이스를 생성하고,
+`DB_USERNAME`, `DB_PASSWORD` 환경변수를 설정해야 한다.
+
+PowerShell에서는 현재 터미널 세션에 다음과 같이 설정한 뒤 실행한다.
+
+```powershell
+$env:DB_USERNAME="your-local-db-username"
+$env:DB_PASSWORD="your-local-db-password"
+.\gradlew.bat bootRun
+```
+
+IntelliJ에서는 **Run/Debug Configurations → Environment variables**에
+`DB_USERNAME`과 `DB_PASSWORD`를 등록한다.
+
+프로젝트의 `.env.example`은 필요한 변수 이름을 안내하기 위한 예제 파일이다.
+Spring Boot는 별도 라이브러리나 실행 설정 없이 `.env` 파일을 자동으로 읽지 않는다.
+따라서 `.env`에 값을 작성하는 것만으로는 애플리케이션 설정에 반영되지 않는다.
+
+테스트는 인메모리 H2 데이터베이스를 사용하므로 로컬 MySQL 계정정보 없이 실행할 수 있다.
+
+---
+
 ## 프로젝트 문서
 
 | 문서                    | 설명                    |

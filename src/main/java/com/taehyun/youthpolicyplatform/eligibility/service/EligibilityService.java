@@ -7,6 +7,7 @@ import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
 import com.taehyun.youthpolicyplatform.benefit.util.ConditionDisplayUtil;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityConditionResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
+import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,14 +33,19 @@ public class EligibilityService {
 
         List<EligibilityConditionResultDto> conditionResults = new ArrayList<>();
 
-        boolean eligible = true;
+        boolean hasRequiredFailure = false;
+        boolean hasRequiredMissingValue = false;
 
         for (BenefitCondition condition : benefit.getConditions()) {
 
-            boolean passed = checkCondition(profile, condition);
+            EligibilityStatus conditionStatus = evaluateCondition(profile, condition);
 
-            if (!passed && condition.getRequired()) {
-                eligible = false;
+            if (Boolean.TRUE.equals(condition.getRequired())) {
+                if (conditionStatus == EligibilityStatus.INELIGIBLE) {
+                    hasRequiredFailure = true;
+                } else if (conditionStatus == EligibilityStatus.NEED_MORE_INFO) {
+                    hasRequiredMissingValue = true;
+                }
             }
 
             ConditionDisplayDto displayCondition = ConditionDisplayUtil.convert(condition);
@@ -56,17 +62,63 @@ public class EligibilityService {
 
                             createUserValueLabel(profile, condition),
 
-                            passed,
-                            createMessage(condition, profile, passed)
+                            conditionStatus,
+                            createMessage(condition, conditionStatus)
                     )
             );
         }
 
+        EligibilityStatus status = determineStatus(
+                hasRequiredFailure,
+                hasRequiredMissingValue
+        );
+
         return new EligibilityResultDto(
                 benefit.getTitle(),
-                eligible,
+                status,
                 conditionResults
         );
+    }
+
+    private EligibilityStatus determineStatus(
+            boolean hasRequiredFailure,
+            boolean hasRequiredMissingValue
+    ) {
+        if (hasRequiredFailure) {
+            return EligibilityStatus.INELIGIBLE;
+        }
+        if (hasRequiredMissingValue) {
+            return EligibilityStatus.NEED_MORE_INFO;
+        }
+        return EligibilityStatus.ELIGIBLE;
+    }
+
+    private EligibilityStatus evaluateCondition(
+            UserProfile profile,
+            BenefitCondition condition
+    ) {
+        if (isUserValueMissing(profile, condition.getFieldName().trim())) {
+            return EligibilityStatus.NEED_MORE_INFO;
+        }
+
+        return checkCondition(profile, condition)
+                ? EligibilityStatus.ELIGIBLE
+                : EligibilityStatus.INELIGIBLE;
+    }
+
+    private boolean isUserValueMissing(UserProfile profile, String fieldName) {
+        return switch (fieldName) {
+            case "age" -> profile.getAge() == null;
+            case "householdSize" -> profile.getHouseholdSize() == null;
+            case "monthlyIncome" -> profile.getMonthlyIncome() == null;
+            case "annualIncome" -> profile.getAnnualIncome() == null;
+            case "middleIncomePercent" -> profile.getMiddleIncomePercent() == null;
+            case "region" -> profile.getAddress() == null || profile.getAddress().isBlank();
+            case "employed" -> profile.getEmployed() == null;
+            case "student" -> profile.getStudent() == null;
+            case "houseOwner" -> profile.getHouseOwner() == null;
+            default -> false;
+        };
     }
 
     private boolean checkCondition(UserProfile profile, BenefitCondition condition) {
@@ -76,15 +128,15 @@ public class EligibilityService {
         String value = condition.getValue().trim();
 
         return switch (fieldName) {
-            case "age" -> compareNumber(profile.getAge(), operator, Integer.parseInt(value));
-            case "householdSize" -> compareNumber(profile.getHouseholdSize(), operator, Integer.parseInt(value));
-            case "monthlyIncome" -> compareNumber(profile.getMonthlyIncome(), operator, Integer.parseInt(value));
-            case "annualIncome" -> compareNumber(profile.getAnnualIncome(), operator, Integer.parseInt(value));
-            case "middleIncomePercent" -> compareNumber(profile.getMiddleIncomePercent(), operator, Integer.parseInt(value));
+            case "age" -> compareNumber(profile.getAge(), operator, value);
+            case "householdSize" -> compareNumber(profile.getHouseholdSize(), operator, value);
+            case "monthlyIncome" -> compareNumber(profile.getMonthlyIncome(), operator, value);
+            case "annualIncome" -> compareNumber(profile.getAnnualIncome(), operator, value);
+            case "middleIncomePercent" -> compareNumber(profile.getMiddleIncomePercent(), operator, value);
             case "region" -> compareAddress(profile.getAddress(), operator, value);
-            case "employed" -> compareBoolean(profile.getEmployed(), operator, Boolean.parseBoolean(value));
-            case "student" -> compareBoolean(profile.getStudent(), operator, Boolean.parseBoolean(value));
-            case "houseOwner" -> compareBoolean(profile.getHouseOwner(), operator, Boolean.parseBoolean(value));
+            case "employed" -> compareBoolean(profile.getEmployed(), operator, value);
+            case "student" -> compareBoolean(profile.getStudent(), operator, value);
+            case "houseOwner" -> compareBoolean(profile.getHouseOwner(), operator, value);
             default -> false;
         };
     }
@@ -94,28 +146,39 @@ public class EligibilityService {
         String fieldName = condition.getFieldName().trim();
 
         return switch (fieldName) {
-            case "age" -> profile.getAge() + "세";
-            case "region" -> profile.getAddress();
-            case "householdSize" -> profile.getHouseholdSize() + "명";
-            case "monthlyIncome" -> profile.getMonthlyIncome() + "원";
-            case "annualIncome" -> profile.getAnnualIncome() + "원";
-            case "middleIncomePercent" -> profile.getMiddleIncomePercent() + "%";
-            case "employed" -> profile.getEmployed() ? "예" : "아니오";
-            case "student" -> profile.getStudent() ? "예" : "아니오";
-            case "houseOwner" -> profile.getHouseOwner() ? "주택 보유" : "무주택";
+            case "age" -> profile.getAge() == null ? "미입력" : profile.getAge() + "세";
+            case "region" -> profile.getAddress() == null || profile.getAddress().isBlank()
+                    ? "미입력" : profile.getAddress();
+            case "householdSize" -> profile.getHouseholdSize() == null
+                    ? "미입력" : profile.getHouseholdSize() + "명";
+            case "monthlyIncome" -> profile.getMonthlyIncome() == null
+                    ? "미입력" : profile.getMonthlyIncome() + "원";
+            case "annualIncome" -> profile.getAnnualIncome() == null
+                    ? "미입력" : profile.getAnnualIncome() + "원";
+            case "middleIncomePercent" -> profile.getMiddleIncomePercent() == null
+                    ? "미입력" : profile.getMiddleIncomePercent() + "%";
+            case "employed" -> profile.getEmployed() == null
+                    ? "미입력" : profile.getEmployed() ? "예" : "아니오";
+            case "student" -> profile.getStudent() == null
+                    ? "미입력" : profile.getStudent() ? "예" : "아니오";
+            case "houseOwner" -> profile.getHouseOwner() == null
+                    ? "미입력" : profile.getHouseOwner() ? "주택 보유" : "무주택";
             default -> "-";
         };
     }
 
     private String createMessage(
             BenefitCondition condition,
-            UserProfile profile,
-            boolean passed
+            EligibilityStatus status
     ) {
         String fieldName = condition.getFieldName().trim();
 
-        if (passed) {
-            return "조건을 충족했습니다.";
+        if (status == EligibilityStatus.NEED_MORE_INFO) {
+            return createMissingValueMessage(fieldName);
+        }
+
+        if (status == EligibilityStatus.ELIGIBLE) {
+            return createSatisfiedMessage(fieldName);
         }
 
         return switch (fieldName) {
@@ -132,16 +195,45 @@ public class EligibilityService {
         };
     }
 
-    private boolean compareNumber(Integer userValue, String operator, Integer conditionValue) {
+    private String createSatisfiedMessage(String fieldName) {
+        return switch (fieldName) {
+            case "age" -> "나이 조건을 충족했습니다.";
+            case "region" -> "거주지역 조건을 충족했습니다.";
+            case "householdSize" -> "가구원 수 조건을 충족했습니다.";
+            case "monthlyIncome" -> "월 소득 조건을 충족했습니다.";
+            case "annualIncome" -> "연 소득 조건을 충족했습니다.";
+            case "middleIncomePercent" -> "중위소득 기준을 충족했습니다.";
+            case "employed" -> "취업 여부 조건을 충족했습니다.";
+            case "student" -> "학생 여부 조건을 충족했습니다.";
+            case "houseOwner" -> "주택 보유 여부 조건을 충족했습니다.";
+            default -> "조건을 충족했습니다.";
+        };
+    }
 
-        if (userValue == null) {
-            return false;
-        }
+    private String createMissingValueMessage(String fieldName) {
+        return switch (fieldName) {
+            case "age" -> "나이 정보가 없어 확인이 필요합니다.";
+            case "region" -> "거주지역 정보가 없어 확인이 필요합니다.";
+            case "householdSize" -> "가구원 수 정보가 없어 확인이 필요합니다.";
+            case "monthlyIncome" -> "월 소득 정보가 없어 확인이 필요합니다.";
+            case "annualIncome" -> "연 소득 정보가 없어 확인이 필요합니다.";
+            case "middleIncomePercent" -> "중위소득 정보가 없어 확인이 필요합니다.";
+            case "employed" -> "취업 여부 정보가 없어 확인이 필요합니다.";
+            case "student" -> "학생 여부 정보가 없어 확인이 필요합니다.";
+            case "houseOwner" -> "주택 보유 여부 정보가 없어 확인이 필요합니다.";
+            default -> "사용자 정보가 없어 확인이 필요합니다.";
+        };
+    }
+
+    private boolean compareNumber(Integer userValue, String operator, String value) {
+        int conditionValue = Integer.parseInt(value);
 
         return switch (operator) {
             case ">=" -> userValue >= conditionValue;
             case "<=" -> userValue <= conditionValue;
-            case "==" -> userValue.equals(conditionValue);
+            case ">" -> userValue > conditionValue;
+            case "<" -> userValue < conditionValue;
+            case "=", "==" -> userValue.equals(conditionValue);
             case "!=" -> !userValue.equals(conditionValue);
             default -> false;
         };
@@ -149,15 +241,11 @@ public class EligibilityService {
 
     private boolean compareAddress(String address, String operator, String conditionValue) {
 
-        if (address == null || address.isBlank()) {
-            return false;
-        }
-
         String normalizedAddress = normalizeRegion(address);
         String normalizedConditionValue = normalizeRegion(conditionValue);
 
         return switch (operator) {
-            case "==" -> normalizedAddress.contains(normalizedConditionValue);
+            case "=", "==" -> normalizedAddress.contains(normalizedConditionValue);
             case "!=" -> !normalizedAddress.contains(normalizedConditionValue);
             default -> false;
         };
@@ -189,14 +277,11 @@ public class EligibilityService {
                 .replace("제주 ", "제주특별자치도 ");
     }
 
-    private boolean compareBoolean(Boolean userValue, String operator, Boolean conditionValue) {
-
-        if (userValue == null) {
-            return false;
-        }
+    private boolean compareBoolean(Boolean userValue, String operator, String value) {
+        Boolean conditionValue = Boolean.parseBoolean(value);
 
         return switch (operator) {
-            case "==" -> userValue.equals(conditionValue);
+            case "=", "==" -> userValue.equals(conditionValue);
             case "!=" -> !userValue.equals(conditionValue);
             default -> false;
         };

@@ -15,7 +15,7 @@ Eligibility Engine은 정책별로 다음 세 가지 결과를 반환한다.
 | 결과             | 설명       |
 | -------------- | -------- |
 | ELIGIBLE       | 신청 가능    |
-| NOT_ELIGIBLE   | 신청 불가능   |
+| INELIGIBLE     | 신청 불가능   |
 | NEED_MORE_INFO | 추가 정보 필요 |
 
 ---
@@ -30,12 +30,13 @@ Eligibility Engine은 정책별로 다음 세 가지 결과를 반환한다.
 | ----------------- | -------- |
 | age               | 26       |
 | region            | 수원       |
-| household_size    | 1        |
-| monthly_income    | 1800000  |
-| income_percent    | 82       |
-| employment_status | EMPLOYED |
-| student_status    | false    |
-| house_owner       | false    |
+| householdSize     | 1        |
+| monthlyIncome     | 1800000  |
+| annualIncome      | 21600000 |
+| middleIncomePercent | 82     |
+| employed          | true     |
+| student           | false    |
+| houseOwner        | false    |
 
 ---
 
@@ -49,9 +50,9 @@ Eligibility Engine은 정책별로 다음 세 가지 결과를 반환한다.
 | ---------- | -------------- | -------- | -------- | -------- |
 | 1          | age            | >=       | 19       | true     |
 | 1          | age            | <=       | 34       | true     |
-| 1          | region         | IN       | 수원,서울,경기 | true     |
-| 1          | house_owner    | =        | false    | true     |
-| 1          | income_percent | <=       | 60       | true     |
+| 1          | region         | ==       | 경기     | true     |
+| 1          | houseOwner     | ==       | false    | true     |
+| 1          | middleIncomePercent | <=  | 60       | true     |
 
 ---
 
@@ -97,7 +98,7 @@ ELIGIBLE
 결과:
 
 ```text
-NOT_ELIGIBLE
+INELIGIBLE
 ```
 
 예시:

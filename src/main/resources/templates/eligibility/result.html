@@ -16,12 +16,16 @@
     최종 결과: 신청 가능합니다.
 </h2>
 
-<h2 th:unless="${result.eligible}" style="color: red;">
+<h2 th:if="${result.ineligible}" style="color: red;">
     최종 결과: 신청 불가능합니다.
 </h2>
 
-<div th:unless="${result.eligible}">
-    <h3>신청 불가능 사유</h3>
+<h2 th:if="${result.needMoreInfo}" style="color: orange;">
+    최종 결과: 추가 정보가 필요합니다.
+</h2>
+
+<div th:if="${!result.eligible}">
+    <h3>판정 사유</h3>
 
     <ul>
         <li th:each="condition : ${result.conditionResults}"
@@ -61,8 +65,12 @@
                 통과
             </span>
 
-            <span th:unless="${condition.passed}" style="color: red;">
+            <span th:if="${!condition.passed and !condition.needMoreInfo}" style="color: red;">
                 실패
+            </span>
+
+            <span th:if="${condition.needMoreInfo}" style="color: orange;">
+                확인 필요
             </span>
         </td>
 
