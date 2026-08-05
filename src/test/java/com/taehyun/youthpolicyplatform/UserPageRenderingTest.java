@@ -69,6 +69,11 @@ class UserPageRenderingTest {
         HttpResponse<String> stylesheet = get(client, "/css/common.css");
         assertThat(stylesheet.statusCode()).isEqualTo(200);
         assertThat(stylesheet.body()).contains("--color-primary");
+
+        HttpResponse<String> benefitList = get(client, "/benefits");
+        assertThat(benefitList.body())
+                .contains("로그인하면 모든 정책의 신청 가능 여부를 목록에서 바로 알려드려요.")
+                .contains("href=\"/login\"");
     }
 
     @Test
@@ -116,6 +121,54 @@ class UserPageRenderingTest {
                 .contains("맞춤 정책 판정을 위해 프로필 정보가 필요합니다")
                 .contains("/my/profile?returnBenefitId=91")
                 .contains("/benefits/91");
+
+        HttpResponse<String> benefitList = get(client, "/benefits");
+        assertThat(benefitList.statusCode()).isEqualTo(200);
+        assertThat(benefitList.body())
+                .contains("프로필을 입력하면 내 조건에 맞는 정책을 바로 확인할 수 있어요.")
+                .contains("href=\"/my/profile\"");
+    }
+
+    @Test
+    void personalizedBenefitListRendersAllStatusesInPriorityOrder() throws Exception {
+        User user = saveUser("personalized-list@example.com", Role.USER);
+        userProfileRepository.save(new UserProfile(
+                25,
+                "서울특별시 마포구",
+                1,
+                2_000_000,
+                24_000_000,
+                80,
+                null,
+                false,
+                false,
+                user
+        ));
+
+        BenefitCategory category = categoryRepository.save(new BenefitCategory("맞춤 판정 테스트"));
+        Benefit ineligible = saveBenefitWithCondition(
+                "즉시판정 조건불일치 정책", category, "age", "<=", "18"
+        );
+        Benefit needMoreInfo = saveBenefitWithCondition(
+                "즉시판정 추가정보 정책", category, "employed", "==", "true"
+        );
+        Benefit eligible = saveBenefitWithCondition(
+                "즉시판정 신청가능 정책", category, "age", ">=", "19"
+        );
+
+        HttpClient client = newClient();
+        login(client, user.getEmail());
+
+        HttpResponse<String> response = get(client, "/benefits");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body())
+                .contains("신청 가능", "추가 정보 필요", "현재 조건 불일치")
+                .contains("취업 여부 정보가 없어 확인이 필요합니다.");
+        assertThat(response.body().indexOf(eligible.getTitle()))
+                .isLessThan(response.body().indexOf(needMoreInfo.getTitle()));
+        assertThat(response.body().indexOf(needMoreInfo.getTitle()))
+                .isLessThan(response.body().indexOf(ineligible.getTitle()));
     }
 
     @Test
@@ -172,6 +225,30 @@ class UserPageRenderingTest {
                 .orElseGet(() -> userRepository.save(
                         new User(email, passwordEncoder.encode(PASSWORD), role)
                 ));
+    }
+
+    private Benefit saveBenefitWithCondition(
+            String title,
+            BenefitCategory category,
+            String fieldName,
+            String operator,
+            String value
+    ) {
+        Benefit benefit = benefitRepository.save(new Benefit(
+                title,
+                "정책 설명",
+                "최대 100만원",
+                "https://example.com/apply",
+                category
+        ));
+        conditionRepository.save(new BenefitCondition(
+                fieldName,
+                operator,
+                value,
+                true,
+                benefit
+        ));
+        return benefit;
     }
 
     private HttpClient newClient() {

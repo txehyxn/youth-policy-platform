@@ -22,7 +22,9 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
@@ -141,7 +143,14 @@ class UserFlowControllerTest {
     void alwaysOpenScheduleIsSortedWithoutNullException() {
         BenefitService benefitService = mock(BenefitService.class);
         BookmarkService bookmarkService = mock(BookmarkService.class);
-        BenefitUserController controller = new BenefitUserController(benefitService, bookmarkService);
+        EligibilityService eligibilityService = mock(EligibilityService.class);
+        UserProfileService profileService = mock(UserProfileService.class);
+        BenefitUserController controller = new BenefitUserController(
+                benefitService,
+                bookmarkService,
+                eligibilityService,
+                profileService
+        );
         Benefit benefit = new Benefit("정책", "설명", "지원", "https://example.com", null);
         LocalDate startDate = LocalDate.of(2026, 9, 1);
 
@@ -163,6 +172,118 @@ class UserFlowControllerTest {
         assertThat(view).isEqualTo("benefit/detail");
         assertThat(schedules).extracting(ScheduleDisplayDto::getStartDate)
                 .containsExactly(startDate, null);
+    }
+
+    @Test
+    void anonymousBenefitListShowsLoginGuideAndKeepsPoliciesVisible() {
+        BenefitService benefitService = mock(BenefitService.class);
+        BenefitUserController controller = benefitListController(
+                benefitService,
+                mock(EligibilityService.class),
+                mock(UserProfileService.class)
+        );
+        Benefit benefit = mockBenefit(1L);
+        when(benefitService.findAllForEligibility()).thenReturn(List.of(benefit));
+        Model model = new ExtendedModelMap();
+
+        String view = controller.benefitList(null, model);
+
+        assertThat(view).isEqualTo("benefit/list");
+        assertThat(model.getAttribute("loginRequired")).isEqualTo(true);
+        assertThat(model.getAttribute("benefits")).isEqualTo(List.of(benefit));
+    }
+
+    @Test
+    void benefitListShowsProfileGuideWhenLoggedInUserHasNoProfile() {
+        BenefitService benefitService = mock(BenefitService.class);
+        EligibilityService eligibilityService = mock(EligibilityService.class);
+        UserProfileService profileService = mock(UserProfileService.class);
+        BenefitUserController controller = benefitListController(
+                benefitService,
+                eligibilityService,
+                profileService
+        );
+        Authentication authentication = authenticatedUser("user@example.com");
+        Benefit benefit = mockBenefit(1L);
+        when(benefitService.findAllForEligibility()).thenReturn(List.of(benefit));
+        when(profileService.findByUserEmail("user@example.com"))
+                .thenThrow(new IllegalArgumentException("프로필이 등록되지 않았습니다."));
+        Model model = new ExtendedModelMap();
+
+        String view = controller.benefitList(authentication, model);
+
+        assertThat(view).isEqualTo("benefit/list");
+        assertThat(model.getAttribute("profileRequired")).isEqualTo(true);
+        assertThat(model.getAttribute("eligibilityResults")).isNull();
+    }
+
+    @Test
+    void personalizedBenefitListSortsEligibleNeedMoreInfoAndIneligible() {
+        BenefitService benefitService = mock(BenefitService.class);
+        EligibilityService eligibilityService = mock(EligibilityService.class);
+        UserProfileService profileService = mock(UserProfileService.class);
+        BenefitUserController controller = benefitListController(
+                benefitService,
+                eligibilityService,
+                profileService
+        );
+        Benefit ineligible = mockBenefit(3L);
+        Benefit eligible = mockBenefit(1L);
+        Benefit needMoreInfo = mockBenefit(2L);
+        List<Benefit> originalOrder = List.of(ineligible, eligible, needMoreInfo);
+        UserProfile profile = mock(UserProfile.class);
+        Authentication authentication = authenticatedUser("user@example.com");
+        Map<Long, EligibilityResultDto> results = new LinkedHashMap<>();
+        results.put(3L, result(3L, EligibilityStatus.INELIGIBLE));
+        results.put(1L, result(1L, EligibilityStatus.ELIGIBLE));
+        results.put(2L, result(2L, EligibilityStatus.NEED_MORE_INFO));
+
+        when(benefitService.findAllForEligibility()).thenReturn(originalOrder);
+        when(profileService.findByUserEmail("user@example.com")).thenReturn(profile);
+        when(eligibilityService.checkAll(originalOrder, profile)).thenReturn(results);
+        Model model = new ExtendedModelMap();
+
+        String view = controller.benefitList(authentication, model);
+
+        @SuppressWarnings("unchecked")
+        List<Benefit> sortedBenefits = (List<Benefit>) model.getAttribute("benefits");
+
+        assertThat(view).isEqualTo("benefit/list");
+        assertThat(model.getAttribute("personalized")).isEqualTo(true);
+        assertThat(sortedBenefits).extracting(Benefit::getId)
+                .containsExactly(1L, 2L, 3L);
+        assertThat(model.getAttribute("eligibilityResults")).isSameAs(results);
+    }
+
+    private BenefitUserController benefitListController(
+            BenefitService benefitService,
+            EligibilityService eligibilityService,
+            UserProfileService profileService
+    ) {
+        return new BenefitUserController(
+                benefitService,
+                mock(BookmarkService.class),
+                eligibilityService,
+                profileService
+        );
+    }
+
+    private Benefit mockBenefit(Long id) {
+        Benefit benefit = mock(Benefit.class);
+        when(benefit.getId()).thenReturn(id);
+        return benefit;
+    }
+
+    private EligibilityResultDto result(Long benefitId, EligibilityStatus status) {
+        return new EligibilityResultDto(
+                benefitId,
+                "정책 " + benefitId,
+                "카테고리",
+                "지원 내용",
+                null,
+                status,
+                List.of()
+        );
     }
 
     private SignupRequest signupRequest(String email) {

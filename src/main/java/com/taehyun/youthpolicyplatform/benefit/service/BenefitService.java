@@ -44,6 +44,11 @@ public class BenefitService {
         return benefitRepository.findAll();
     }
 
+    // 사용자 정책 목록에서 카테고리와 자격 조건을 함께 조회한다.
+    public List<Benefit> findAllForEligibility() {
+        return benefitRepository.findAllForEligibility();
+    }
+
     // 정책 단건 조회
     public Benefit findById(Long id) {
         return benefitRepository.findById(id)

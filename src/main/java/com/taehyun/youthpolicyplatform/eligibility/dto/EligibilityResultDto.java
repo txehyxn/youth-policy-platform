@@ -52,4 +52,13 @@ public class EligibilityResultDto {
     public boolean isNeedMoreInfo() {
         return status == EligibilityStatus.NEED_MORE_INFO;
     }
+
+    public List<String> getMissingInfoMessages() {
+        return conditionResults.stream()
+                .filter(EligibilityConditionResultDto::isNeedMoreInfo)
+                .map(EligibilityConditionResultDto::getMessage)
+                .distinct()
+                .limit(2)
+                .toList();
+    }
 }

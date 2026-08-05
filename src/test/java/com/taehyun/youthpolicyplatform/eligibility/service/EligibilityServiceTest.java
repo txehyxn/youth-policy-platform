@@ -9,11 +9,15 @@ import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class EligibilityServiceTest {
@@ -224,6 +228,31 @@ class EligibilityServiceTest {
 
             assertThat(result.getStatus()).isEqualTo(EligibilityStatus.INELIGIBLE);
         }
+    }
+
+    @Test
+    void checksAllBenefitsWithAlreadyLoadedProfileWithoutRepositoryLookup() {
+        Benefit eligible = benefitWithConditions(condition("age", ">=", "19"));
+        Benefit needMoreInfo = benefitWithConditions(condition("employed", "==", "true"));
+        Benefit ineligible = benefitWithConditions(condition("age", "<=", "18"));
+        ReflectionTestUtils.setField(eligible, "id", 1L);
+        ReflectionTestUtils.setField(needMoreInfo, "id", 2L);
+        ReflectionTestUtils.setField(ineligible, "id", 3L);
+        UserProfile profile = profileWithEmployed(null);
+
+        Map<Long, EligibilityResultDto> results = eligibilityService.checkAll(
+                List.of(eligible, needMoreInfo, ineligible),
+                profile
+        );
+
+        assertThat(results).extractingByKeys(1L, 2L, 3L)
+                .extracting(EligibilityResultDto::getStatus)
+                .containsExactly(
+                        EligibilityStatus.ELIGIBLE,
+                        EligibilityStatus.NEED_MORE_INFO,
+                        EligibilityStatus.INELIGIBLE
+                );
+        verifyNoInteractions(benefitRepository, userProfileRepository);
     }
 
     private Benefit benefitWithConditions(BenefitCondition... conditions) {

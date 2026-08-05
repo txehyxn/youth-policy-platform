@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,23 @@ public class EligibilityService {
         UserProfile profile = userProfileRepository.findById(profileId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프로필입니다."));
 
+        return check(benefit, profile);
+    }
+
+    public Map<Long, EligibilityResultDto> checkAll(
+            List<Benefit> benefits,
+            UserProfile profile
+    ) {
+        Map<Long, EligibilityResultDto> results = new LinkedHashMap<>();
+
+        for (Benefit benefit : benefits) {
+            results.put(benefit.getId(), check(benefit, profile));
+        }
+
+        return results;
+    }
+
+    private EligibilityResultDto check(Benefit benefit, UserProfile profile) {
         List<EligibilityConditionResultDto> conditionResults = new ArrayList<>();
 
         boolean hasRequiredFailure = false;

@@ -8,53 +8,92 @@
 <header th:replace="~{fragments/layout :: header}"></header>
 
 <main class="site-main">
-<div class="container">
+    <div class="container">
+        <div class="page-header">
+            <h1>나에게 맞는 청년 정책</h1>
+            <p class="muted" th:if="${personalized}">
+                입력한 프로필을 기준으로 신청 가능성이 높은 정책부터 보여드려요.
+            </p>
+            <p class="muted" th:unless="${personalized}">
+                정책을 살펴보고, 로그인하면 내 조건에 맞는지 바로 확인할 수 있어요.
+            </p>
+        </div>
 
-<h1>청년 정책 목록</h1>
+        <section class="card eligibility-guide" th:if="${loginRequired}">
+            <div>
+                <strong>내가 받을 수 있는 정책을 바로 확인해보세요.</strong>
+                <p>로그인하면 모든 정책의 신청 가능 여부를 목록에서 바로 알려드려요.</p>
+            </div>
+            <a class="button" th:href="@{/login}">로그인</a>
+        </section>
 
-<hr>
+        <section class="card eligibility-guide" th:if="${profileRequired}">
+            <div>
+                <strong>맞춤 판정을 위한 프로필이 필요해요.</strong>
+                <p>프로필을 입력하면 내 조건에 맞는 정책을 바로 확인할 수 있어요.</p>
+            </div>
+            <a class="button" th:href="@{/my/profile}">프로필 입력하기</a>
+        </section>
 
-<div class="table-wrap">
-<table>
+        <div class="benefit-grid" th:if="${benefits != null && !benefits.isEmpty()}">
+            <article class="card benefit-card"
+                     th:each="benefit : ${benefits}"
+                     th:with="result=${eligibilityResults == null ? null : eligibilityResults[benefit.id]}">
+                <div class="benefit-card__header">
+                    <span class="benefit-card__category"
+                          th:text="${benefit.category == null ? '기타' : benefit.category.name}">주거</span>
+                    <h2 th:text="${benefit.title}">청년 정책명</h2>
+                </div>
 
-    <tr>
-        <th>ID</th>
-        <th>정책명</th>
-        <th>카테고리</th>
-        <th>지원 내용</th>
-        <th>상세보기</th>
-    </tr>
+                <p class="benefit-card__support" th:text="${benefit.supportAmount}">
+                    핵심 지원 내용
+                </p>
 
-    <tr th:each="benefit : ${benefits}">
+                <div class="benefit-card__eligibility" th:if="${result != null}">
+                    <div th:if="${result.eligible}">
+                        <span class="badge badge--eligible">신청 가능</span>
+                        <p>현재 입력한 조건으로 신청 가능성이 있습니다.</p>
+                    </div>
 
-        <td th:text="${benefit.id}"></td>
+                    <div th:if="${result.needMoreInfo}">
+                        <span class="badge badge--need-info">추가 정보 필요</span>
+                        <p>정보를 조금 더 입력하면 확인할 수 있습니다.</p>
+                        <ul class="missing-info-list"
+                            th:if="${!result.missingInfoMessages.isEmpty()}">
+                            <li th:each="message : ${result.missingInfoMessages}"
+                                th:text="${message}"></li>
+                        </ul>
+                    </div>
 
-        <td th:text="${benefit.title}"></td>
+                    <div th:if="${result.ineligible}">
+                        <span class="badge badge--ineligible">현재 조건 불일치</span>
+                        <p>현재 입력한 조건 중 일부가 정책 기준과 맞지 않습니다.</p>
+                    </div>
+                </div>
 
-        <td th:text="${benefit.category.name}"></td>
+                <div class="benefit-card__eligibility benefit-card__eligibility--prompt"
+                     th:if="${loginRequired}">
+                    <p>로그인하면 내가 받을 수 있는 정책인지 바로 확인할 수 있어요.</p>
+                    <a th:href="@{/login}">로그인하고 확인하기</a>
+                </div>
 
-        <td th:text="${benefit.supportAmount}"></td>
+                <div class="benefit-card__eligibility benefit-card__eligibility--prompt"
+                     th:if="${profileRequired}">
+                    <p>프로필을 입력하면 내 조건에 맞는 정책을 바로 확인할 수 있어요.</p>
+                    <a th:href="@{/my/profile}">프로필 입력하기</a>
+                </div>
 
-        <td>
-            <a th:href="@{/benefits/{id}(id=${benefit.id})}">
-                상세보기
-            </a>
-        </td>
+                <div class="benefit-card__actions">
+                    <a class="button button--secondary"
+                       th:href="@{/benefits/{id}(id=${benefit.id})}">자세히 보기</a>
+                </div>
+            </article>
+        </div>
 
-    </tr>
-
-</table>
-</div>
-
-<hr>
-
-<p>
-    <a th:href="@{/}">
-        홈으로 돌아가기
-    </a>
-</p>
-
-</div>
+        <section class="card" th:if="${benefits == null || benefits.isEmpty()}">
+            <p>현재 등록된 정책이 없습니다.</p>
+        </section>
+    </div>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

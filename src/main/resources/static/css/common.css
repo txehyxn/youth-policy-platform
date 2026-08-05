@@ -146,6 +146,76 @@ button:hover,
     box-shadow: var(--shadow);
 }
 
+.eligibility-guide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.eligibility-guide p {
+    margin: 6px 0 0;
+    color: var(--color-muted);
+}
+
+.benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.benefit-card {
+    display: flex;
+    min-height: 330px;
+    flex-direction: column;
+}
+
+.benefit-card__category {
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.benefit-card h2 {
+    margin: 6px 0 0;
+    font-size: 21px;
+    line-height: 1.4;
+}
+
+.benefit-card__support {
+    margin: 16px 0;
+    font-weight: 700;
+}
+
+.benefit-card__eligibility {
+    padding: 16px;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.benefit-card__eligibility p {
+    margin: 8px 0 0;
+}
+
+.benefit-card__eligibility--prompt {
+    color: var(--color-muted);
+}
+
+.missing-info-list {
+    margin: 10px 0 0;
+    padding-left: 20px;
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.benefit-card__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: 20px;
+}
+
 .page-header {
     margin-bottom: 28px;
 }
@@ -273,5 +343,18 @@ textarea {
 
     .card {
         padding: 18px;
+    }
+
+    .benefit-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .benefit-card {
+        min-height: 0;
+    }
+
+    .eligibility-guide {
+        align-items: stretch;
+        flex-direction: column;
     }
 }
