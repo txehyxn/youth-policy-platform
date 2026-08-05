@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>정책 신청 일정 캘린더</title>
+    <th:block th:replace="~{fragments/layout :: commonHead('정책 신청 일정 캘린더')}"></th:block>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.css"
           rel="stylesheet">
@@ -48,6 +47,11 @@
 </head>
 <body>
 
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="site-main">
+<div class="container">
+
 <h1 style="text-align:center;">정책 신청 일정 캘린더</h1>
 
 <hr>
@@ -91,6 +95,11 @@
 <p style="text-align:center;">
     <a href="/benefits">정책 목록으로 돌아가기</a>
 </p>
+
+</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

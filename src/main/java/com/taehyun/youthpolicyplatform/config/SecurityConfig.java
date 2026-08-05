@@ -24,7 +24,9 @@ public class SecurityConfig {
                                 "/benefits",
                                 "/benefits/**",
                                 "/calendar",
-                                "/api/calendar/events"
+                                "/api/calendar/events",
+                                "/css/**",
+                                "/js/**"
                         ).permitAll()
                         // 관리자 페이지는 ADMIN 또는 SUPER_ADMIN 권한을 가진 사람만 들어갈 수 있다
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")

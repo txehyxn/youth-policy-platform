@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>회원가입</title>
+    <th:block th:replace="~{fragments/layout :: commonHead('회원가입')}"></th:block>
 </head>
 <body>
+
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="site-main">
+<div class="container">
+<section class="card">
 
 <h1>회원가입</h1>
 
 <p th:if="${errorMessage}"
    th:text="${errorMessage}"
-   style="color: red;">
+   class="alert alert--error">
 </p>
 
 <hr>
@@ -24,6 +29,7 @@
         <input type="email"
                name="email"
                placeholder="example@email.com"
+               th:value="${email}"
                required>
     </p>
 
@@ -67,6 +73,12 @@
 <p>
     <a href="/">메인으로</a>
 </p>
+
+</section>
+</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 
 <script>
     function checkPasswordMatch() {

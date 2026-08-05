@@ -1,26 +1,41 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>판별 결과</title>
+    <th:block th:replace="~{fragments/layout :: commonHead('자격 판정 결과')}"></th:block>
 </head>
 <body>
 
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="site-main">
+<div class="container">
+
 <h1>신청 가능 여부 결과</h1>
 
-<h2 th:text="${result.benefitTitle}"></h2>
+<section class="card">
+    <p class="muted" th:if="${!#strings.isEmpty(result.categoryName)}"
+       th:text="${result.categoryName}"></p>
+    <h2 th:text="${result.benefitTitle}"></h2>
+    <p>
+        <strong>지원 내용</strong><br>
+        <span th:text="${result.supportAmount}"></span>
+    </p>
+</section>
 
 <hr>
 
-<h2 th:if="${result.eligible}" style="color: green;">
+<h2 th:if="${result.eligible}">
+    <span class="badge badge--eligible">ELIGIBLE</span><br>
     최종 결과: 신청 가능합니다.
 </h2>
 
-<h2 th:if="${result.ineligible}" style="color: red;">
+<h2 th:if="${result.ineligible}">
+    <span class="badge badge--ineligible">INELIGIBLE</span><br>
     최종 결과: 신청 불가능합니다.
 </h2>
 
-<h2 th:if="${result.needMoreInfo}" style="color: orange;">
+<h2 th:if="${result.needMoreInfo}">
+    <span class="badge badge--need-info">NEED_MORE_INFO</span><br>
     최종 결과: 추가 정보가 필요합니다.
 </h2>
 
@@ -39,7 +54,8 @@
 
 <h3>조건별 판별 결과</h3>
 
-<table border="1">
+<div class="table-wrap">
+<table>
     <tr>
         <th>조건 항목</th>
         <th>정책 기준</th>
@@ -77,16 +93,41 @@
         <td th:text="${condition.message}"></td>
     </tr>
 </table>
+</div>
 
 <hr>
 
-<p>
-    <a th:href="@{/benefits}">정책 목록으로 돌아가기</a>
-</p>
+<div class="actions">
+    <a class="button button--secondary"
+       th:href="@{/benefits/{id}(id=${result.benefitId})}">정책 상세로 돌아가기</a>
+
+    <a class="button"
+       th:if="${!#strings.isEmpty(result.applicationUrl)}"
+       th:href="${result.applicationUrl}"
+       target="_blank"
+       rel="noopener noreferrer">공식 신청 사이트 확인</a>
+
+    <form th:if="${isBookmarked}"
+          th:action="@{/bookmarks/{id}/delete(id=${result.benefitId})}"
+          method="post">
+        <button class="button button--secondary" type="submit">♥ 관심 취소</button>
+    </form>
+
+    <form th:unless="${isBookmarked}"
+          th:action="@{/bookmarks/{id}(id=${result.benefitId})}"
+          method="post">
+        <button class="button button--secondary" type="submit">♡ 관심 정책 저장</button>
+    </form>
+</div>
 
 <p>
     <a th:href="@{/my/profile}">내 프로필 수정하기</a>
 </p>
+
+</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 
 </body>
 </html>

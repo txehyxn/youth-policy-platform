@@ -75,7 +75,11 @@ public class EligibilityService {
         );
 
         return new EligibilityResultDto(
+                benefit.getId(),
                 benefit.getTitle(),
+                benefit.getCategory() == null ? "" : benefit.getCategory().getName(),
+                benefit.getSupportAmount(),
+                benefit.getApplicationUrl(),
                 status,
                 conditionResults
         );

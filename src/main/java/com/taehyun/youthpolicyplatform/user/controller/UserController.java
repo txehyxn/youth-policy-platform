@@ -4,6 +4,7 @@ import com.taehyun.youthpolicyplatform.user.dto.SignupRequest;
 import com.taehyun.youthpolicyplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -21,9 +22,16 @@ public class UserController {
 
     // 회원가입 처리
     @PostMapping("/signup")
-    public String signup(SignupRequest request) {
+    public String signup(SignupRequest request, Model model) {
 
-        userService.signup(request);
+        try {
+            userService.signup(request);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            model.addAttribute("email", request.getEmail());
+
+            return "user/signup";
+        }
 
         return "redirect:/login";
     }

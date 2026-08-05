@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <th:block th:fragment="commonHead(pageTitle)">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title th:text="${pageTitle + ' | 청년 맞춤형 정책 플랫폼'}">청년 맞춤형 정책 플랫폼</title>
+        <link rel="stylesheet" th:href="@{/css/common.css}">
+    </th:block>
+</head>
+<body>
+
+<header th:fragment="header" class="site-header">
+    <div class="container header-inner">
+        <a class="brand" th:href="@{/}">청년정책 플랫폼</a>
+
+        <nav class="main-nav" aria-label="주요 메뉴">
+            <a th:href="@{/benefits}">정책 찾기</a>
+            <a th:href="@{/calendar}">신청 일정</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/my/profile}">마이페이지</a>
+            <a sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')"
+               th:href="@{/admin/benefits}">관리자</a>
+        </nav>
+
+        <div class="auth-nav">
+            <a sec:authorize="isAnonymous()" th:href="@{/login}">로그인</a>
+            <a sec:authorize="isAnonymous()" class="button button--small" th:href="@{/signup}">회원가입</a>
+            <form sec:authorize="isAuthenticated()" class="inline-form" th:action="@{/logout}" method="post">
+                <button class="nav-button" type="submit">로그아웃</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="container">
+        <strong>청년 맞춤형 정책 플랫폼</strong>
+        <p>내 조건에 맞는 정책을 더 쉽게 찾고 준비할 수 있도록 돕습니다.</p>
+    </div>
+</footer>
+
+</body>
+</html>

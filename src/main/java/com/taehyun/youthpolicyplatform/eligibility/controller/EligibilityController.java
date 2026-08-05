@@ -1,5 +1,6 @@
 package com.taehyun.youthpolicyplatform.eligibility.controller;
 
+import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.service.EligibilityService;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
@@ -17,6 +18,7 @@ public class EligibilityController {
 
     private final EligibilityService eligibilityService;
     private final UserProfileService userProfileService;
+    private final BookmarkService bookmarkService;
 
     @GetMapping("/eligibility/check")
     public String check(
@@ -30,22 +32,26 @@ public class EligibilityController {
             return "redirect:/login";
         }
 
+        UserProfile profile;
+
         try {
-            UserProfile profile =
-                    userProfileService.findByUserEmail(authentication.getName());
-
-            EligibilityResultDto result =
-                    eligibilityService.check(benefitId, profile.getId());
-
-            model.addAttribute("result", result);
-
-            return "eligibility/result";
-
+            profile = userProfileService.findByUserEmail(authentication.getName());
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", "신청 가능 여부를 확인하려면 먼저 내 프로필을 등록해야 합니다.");
             model.addAttribute("benefitId", benefitId);
 
             return "eligibility/profile-required";
         }
+
+        EligibilityResultDto result =
+                eligibilityService.check(benefitId, profile.getId());
+
+        model.addAttribute("result", result);
+        model.addAttribute(
+                "isBookmarked",
+                bookmarkService.isBookmarked(authentication.getName(), benefitId)
+        );
+
+        return "eligibility/result";
     }
 }

@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>로그인</title>
+    <th:block th:replace="~{fragments/layout :: commonHead('로그인')}"></th:block>
 </head>
 <body>
 
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="site-main">
+<div class="container">
+<section class="card">
+
 <h1>로그인</h1>
 
-<p th:if="${param.error}" style="color: red;">
+<p th:if="${param.error}" class="alert alert--error">
     이메일 또는 비밀번호가 올바르지 않습니다.
 </p>
 
-<p th:if="${param.logout}" style="color: green;">
+<p th:if="${param.logout}" class="alert alert--success">
     로그아웃되었습니다.
 </p>
 
@@ -46,6 +51,12 @@
     계정이 없으신가요?
     <a th:href="@{/signup}">회원가입</a>
 </p>
+
+</section>
+</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 
 </body>
 </html>

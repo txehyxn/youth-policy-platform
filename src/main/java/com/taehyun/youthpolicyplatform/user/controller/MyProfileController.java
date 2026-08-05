@@ -17,7 +17,11 @@ public class MyProfileController {
     private final BookmarkService bookmarkService;
 
     @GetMapping("/my/profile")
-    public String profileForm(Authentication authentication, Model model) {
+    public String profileForm(
+            Authentication authentication,
+            @RequestParam(required = false) Long returnBenefitId,
+            Model model
+    ) {
 
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
@@ -39,6 +43,7 @@ public class MyProfileController {
                 "bookmarks",
                 bookmarkService.findMyBookmarks(authentication.getName())
         );
+        model.addAttribute("returnBenefitId", returnBenefitId);
 
         return "user/my-profile";
     }
@@ -53,7 +58,8 @@ public class MyProfileController {
             @RequestParam Integer annualIncome,
             @RequestParam Boolean employed,
             @RequestParam Boolean student,
-            @RequestParam Boolean houseOwner
+            @RequestParam Boolean houseOwner,
+            @RequestParam(required = false) Long returnBenefitId
     ) {
 
         userProfileService.saveForLoggedInUser(
@@ -67,6 +73,10 @@ public class MyProfileController {
                 student,
                 houseOwner
         );
+
+        if (returnBenefitId != null) {
+            return "redirect:/benefits/" + returnBenefitId + "?profileSaved=true";
+        }
 
         return "redirect:/my/profile?saved=true";
     }

@@ -1,6 +1,7 @@
 package com.taehyun.youthpolicyplatform.benefit.controller;
 
 import com.taehyun.youthpolicyplatform.benefit.domain.Benefit;
+import com.taehyun.youthpolicyplatform.benefit.domain.BenefitSchedule;
 import com.taehyun.youthpolicyplatform.benefit.dto.ConditionDisplayDto;
 import com.taehyun.youthpolicyplatform.benefit.dto.ScheduleDisplayDto;
 import com.taehyun.youthpolicyplatform.benefit.service.BenefitService;
@@ -51,7 +52,10 @@ public class BenefitUserController {
         List<ScheduleDisplayDto> schedules =
                 benefit.getSchedules()
                         .stream()
-                        .sorted(Comparator.comparing(schedule -> schedule.getStartDate()))
+                        .sorted(Comparator.comparing(
+                                BenefitSchedule::getStartDate,
+                                Comparator.nullsLast(Comparator.naturalOrder())
+                        ))
                         .map(ScheduleDisplayUtil::convert)
                         .toList();
 
