@@ -179,6 +179,48 @@ public class UserProfile {
         this.houseOwner = null;
     }
 
+    public void updateBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public void updateAddress(String address) {
+        this.address = address;
+    }
+
+    public void updateRegionCode(String regionCode) {
+        this.regionCode = regionCode;
+    }
+
+    public void updateHouseholdSize(Integer householdSize) {
+        this.householdSize = householdSize;
+    }
+
+    public void updateMonthlyEarnedIncome(Long monthlyEarnedIncome) {
+        this.monthlyEarnedIncome = monthlyEarnedIncome;
+        this.monthlyIncome = null;
+    }
+
+    public void updateEmploymentStatus(EmploymentStatus employmentStatus) {
+        this.employmentStatus = employmentStatus;
+        this.employed = null;
+    }
+
+    public void updateEducationStatus(EducationStatus educationStatus) {
+        this.educationStatus = educationStatus;
+        this.student = null;
+    }
+
+    public void updateHousingOwnershipStatus(
+            HousingOwnershipStatus housingOwnershipStatus
+    ) {
+        this.housingOwnershipStatus = housingOwnershipStatus;
+        this.houseOwner = null;
+    }
+
+    public void updateMiddleIncomePercent(Integer middleIncomePercent) {
+        this.middleIncomePercent = middleIncomePercent;
+    }
+
     public Long getEligibilityMonthlyEarnedIncome() {
         if (monthlyEarnedIncome != null) {
             return monthlyEarnedIncome;
