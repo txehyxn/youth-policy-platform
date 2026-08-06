@@ -34,6 +34,18 @@ public class ProfileEligibilityUpdateService {
         UserProfile profile = userProfileService.patchProfileInputsForLoggedInUser(
                 email, request
         );
+        return recalculate(profile, true);
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileEligibilityUpdateResponse recalculate(UserProfile profile) {
+        return recalculate(profile, false);
+    }
+
+    private ProfileEligibilityUpdateResponse recalculate(
+            UserProfile profile,
+            boolean profileSaved
+    ) {
         List<Benefit> benefits = benefitService.findAllForEligibility();
         Map<Long, EligibilityResultDto> results = eligibilityService.checkAll(
                 benefits, profile
@@ -74,10 +86,23 @@ public class ProfileEligibilityUpdateService {
                         .map(entry -> new ProfileEligibilityUpdateResponse.MissingFieldSummary(
                                 entry.getKey(), entry.getValue()[0], entry.getValue()[1]
                         ))
+                        .sorted((left, right) -> {
+                            int singleMissingCompare = Integer.compare(
+                                    right.singleMissingPolicyCount(),
+                                    left.singleMissingPolicyCount()
+                            );
+                            if (singleMissingCompare != 0) {
+                                return singleMissingCompare;
+                            }
+                            return Integer.compare(
+                                    right.affectedPolicyCount(),
+                                    left.affectedPolicyCount()
+                            );
+                        })
                         .toList();
 
         return new ProfileEligibilityUpdateResponse(
-                true,
+                profileSaved,
                 new ProfileEligibilityUpdateResponse.Summary(
                         eligibleCount, needMoreInfoCount, ineligibleCount
                 ),

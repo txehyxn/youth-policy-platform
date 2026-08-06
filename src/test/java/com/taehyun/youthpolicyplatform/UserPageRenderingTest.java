@@ -25,6 +25,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -218,6 +219,78 @@ class UserPageRenderingTest {
                 .contains("/benefits/" + benefit.getId())
                 .contains("https://example.com/apply")
                 .contains("/bookmarks/" + benefit.getId());
+    }
+
+    @Test
+    void profilePageRendersRealtimeEligibilityUiAndStaticScript() throws Exception {
+        User user = saveUser("realtime-profile@example.com", Role.USER);
+        userProfileRepository.save(new UserProfile(
+                LocalDate.of(2000, 1, 1),
+                "서울특별시 마포구",
+                1,
+                2_000_000L,
+                null,
+                null,
+                78,
+                null,
+                null,
+                null,
+                user
+        ));
+        BenefitCategory category = categoryRepository.save(
+                new BenefitCategory("실시간 프로필 테스트")
+        );
+        saveBenefitWithCondition(
+                "취업 상태 추가입력 정책",
+                category,
+                "employmentStatus",
+                "==",
+                "EMPLOYED"
+        );
+        HttpClient client = newClient();
+        login(client, user.getEmail());
+
+        HttpResponse<String> response = get(client, "/my/profile");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body())
+                .contains("내 조건으로 확인한 정책")
+                .contains("id=\"eligibleCount\"", "id=\"needMoreInfoCount\"", "id=\"ineligibleCount\"")
+                .contains("취업 상태 정보를 입력하면")
+                .contains("data-auto-save-field=\"birthDate\"")
+                .contains("data-auto-save-field=\"regionCode\"")
+                .contains("data-auto-save-field=\"householdSize\"")
+                .contains("data-auto-save-field=\"monthlyEarnedIncome\"")
+                .contains("data-auto-save-field=\"employmentStatus\"")
+                .contains("data-auto-save-field=\"educationStatus\"")
+                .contains("data-auto-save-field=\"housingOwnershipStatus\"")
+                .contains("data-profile-field=\"EMPLOYMENT_STATUS\"")
+                .contains("전체 내용 저장")
+                .contains("href=\"/benefits\"")
+                .contains("/js/profile-auto-save.js");
+        assertThat(response.body())
+                .matches("(?s).*id=\"needMoreInfoCount\">\\d+개</strong>.*");
+
+        HttpResponse<String> script = get(client, "/js/profile-auto-save.js");
+        assertThat(script.statusCode()).isEqualTo(200);
+        assertThat(script.body())
+                .contains("method: \"PATCH\"")
+                .contains("AbortController")
+                .contains("latestRequestSequence")
+                .contains("550");
+    }
+
+    @Test
+    void anonymousProfilePageRemainsProtected() throws Exception {
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .build();
+
+        HttpResponse<String> response = get(client, "/my/profile");
+
+        assertThat(response.statusCode()).isEqualTo(302);
+        assertThat(response.headers().firstValue("location"))
+                .hasValueSatisfying(location -> assertThat(location).endsWith("/login"));
     }
 
     private User saveUser(String email, Role role) {

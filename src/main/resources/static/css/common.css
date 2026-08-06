@@ -302,6 +302,94 @@ textarea {
     margin-bottom: 20px;
 }
 
+.profile-eligibility-summary {
+    margin: 24px 0 32px;
+}
+
+.profile-eligibility-summary__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.profile-eligibility-summary__header h2,
+.profile-eligibility-summary__header p {
+    margin: 0;
+}
+
+.eligibility-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.eligibility-summary-item {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.eligibility-summary-item__label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.eligibility-summary-item strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 28px;
+}
+
+.eligibility-summary-item p {
+    margin: 8px 0 0;
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
+.eligibility-summary-item--eligible strong {
+    color: var(--color-success);
+}
+
+.eligibility-summary-item--need-info strong {
+    color: var(--color-warning);
+}
+
+.eligibility-summary-item--ineligible strong {
+    color: #475467;
+}
+
+.missing-field-guides {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #f5f7ff;
+}
+
+.missing-field-guides:empty {
+    display: none;
+}
+
+.missing-field-guides__title {
+    margin: 0;
+    font-weight: 700;
+}
+
+.missing-field-guides ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+}
+
+.eligibility-disclaimer {
+    margin: 18px 0 0;
+    color: var(--color-muted);
+    font-size: 13px;
+}
+
 .profile-income-summary > span {
     margin-left: 8px;
 }
@@ -334,6 +422,30 @@ textarea {
 .form-field input,
 .form-field select {
     width: 100%;
+    min-height: 44px;
+}
+
+.form-field--recommended {
+    margin: -8px;
+    padding: 8px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: #f8fbff;
+}
+
+.field-recommendation {
+    color: var(--color-primary-dark);
+    font-size: 13px;
+}
+
+.form-field--error input,
+.form-field--error select {
+    border-color: var(--color-danger);
+}
+
+.field-error {
+    color: var(--color-danger);
+    font-size: 13px;
 }
 
 .field-help {
@@ -353,6 +465,31 @@ textarea {
 .region-code-input {
     color: var(--color-muted);
     background: #f8fafc;
+}
+
+.profile-save-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-save-status {
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.profile-save-status[data-state="saving"],
+.profile-save-status[data-state="waiting"] {
+    color: var(--color-primary-dark);
+}
+
+.profile-save-status[data-state="saved"] {
+    color: var(--color-success);
+}
+
+.profile-save-status[data-state="error"] {
+    color: var(--color-danger);
 }
 
 .site-footer {
@@ -415,6 +552,15 @@ textarea {
         flex-direction: column;
     }
 
+    .profile-eligibility-summary__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .eligibility-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
     .profile-form__grid {
         grid-template-columns: 1fr;
     }
@@ -426,5 +572,14 @@ textarea {
     .input-with-action {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .profile-save-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .profile-save-row button {
+        width: 100%;
     }
 }

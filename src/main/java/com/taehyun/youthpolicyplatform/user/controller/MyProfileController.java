@@ -1,6 +1,8 @@
 package com.taehyun.youthpolicyplatform.user.controller;
 
 import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
+import com.taehyun.youthpolicyplatform.eligibility.dto.ProfileEligibilityUpdateResponse;
+import com.taehyun.youthpolicyplatform.eligibility.service.ProfileEligibilityUpdateService;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
@@ -13,12 +15,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 public class MyProfileController {
 
     private final UserProfileService userProfileService;
     private final BookmarkService bookmarkService;
+    private final ProfileEligibilityUpdateService profileEligibilityUpdateService;
 
     @GetMapping("/my/profile")
     public String profileForm(
@@ -32,16 +37,35 @@ public class MyProfileController {
             return "redirect:/login";
         }
 
+        UserProfile profile = null;
+
         try {
-            UserProfile profile =
-                    userProfileService.findByUserEmail(authentication.getName());
-
-            model.addAttribute("profile", profile);
-            model.addAttribute("hasProfile", true);
-
+            profile = userProfileService.findByUserEmail(authentication.getName());
         } catch (IllegalArgumentException e) {
             model.addAttribute("hasProfile", false);
         }
+
+        ProfileEligibilityUpdateResponse eligibilityResponse = null;
+        if (profile != null) {
+            model.addAttribute("profile", profile);
+            model.addAttribute("hasProfile", true);
+            eligibilityResponse = profileEligibilityUpdateService.recalculate(profile);
+        }
+
+        ProfileEligibilityUpdateResponse.Summary eligibilitySummary =
+                eligibilityResponse == null
+                        ? new ProfileEligibilityUpdateResponse.Summary(0, 0, 0)
+                        : eligibilityResponse.summary();
+        List<ProfileEligibilityUpdateResponse.MissingFieldSummary> missingSummaries =
+                eligibilityResponse == null
+                        ? List.of()
+                        : eligibilityResponse.missingFieldSummaries().stream().limit(2).toList();
+        model.addAttribute("eligibilitySummary", eligibilitySummary);
+        model.addAttribute("missingFieldSummaries", missingSummaries);
+        model.addAttribute(
+                "topMissingFieldNames",
+                missingSummaries.stream().map(summary -> summary.field().name()).toList()
+        );
 
         model.addAttribute(
                 "bookmarks",

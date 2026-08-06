@@ -9,12 +9,15 @@ import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
 import com.taehyun.youthpolicyplatform.eligibility.controller.EligibilityController;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
+import com.taehyun.youthpolicyplatform.eligibility.dto.ProfileEligibilityUpdateResponse;
 import com.taehyun.youthpolicyplatform.eligibility.service.EligibilityService;
+import com.taehyun.youthpolicyplatform.eligibility.service.ProfileEligibilityUpdateService;
 import com.taehyun.youthpolicyplatform.user.controller.MyProfileController;
 import com.taehyun.youthpolicyplatform.user.controller.UserController;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.ProfileField;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.dto.SignupRequest;
 import com.taehyun.youthpolicyplatform.user.dto.UserProfileRequest;
@@ -118,7 +121,11 @@ class UserFlowControllerTest {
     void profileSaveReturnsToOriginalBenefitWhenRequested() {
         UserProfileService profileService = mock(UserProfileService.class);
         BookmarkService bookmarkService = mock(BookmarkService.class);
-        MyProfileController controller = new MyProfileController(profileService, bookmarkService);
+        MyProfileController controller = new MyProfileController(
+                profileService,
+                bookmarkService,
+                mock(ProfileEligibilityUpdateService.class)
+        );
         Authentication authentication = authenticatedUser("user@example.com");
         UserProfileRequest request = new UserProfileRequest();
         request.setBirthDate(LocalDate.of(2001, 5, 10));
@@ -146,7 +153,11 @@ class UserFlowControllerTest {
     void profileFormBindsBlankOptionalValuesAsNull() throws Exception {
         UserProfileService profileService = mock(UserProfileService.class);
         BookmarkService bookmarkService = mock(BookmarkService.class);
-        MyProfileController controller = new MyProfileController(profileService, bookmarkService);
+        MyProfileController controller = new MyProfileController(
+                profileService,
+                bookmarkService,
+                mock(ProfileEligibilityUpdateService.class)
+        );
         Authentication authentication = authenticatedUser("user@example.com");
         MockMvc mockMvc = standaloneSetup(controller).build();
 
@@ -173,6 +184,41 @@ class UserFlowControllerTest {
         assertThat(request.getEmploymentStatus()).isNull();
         assertThat(request.getEducationStatus()).isNull();
         assertThat(request.getHousingOwnershipStatus()).isNull();
+    }
+
+    @Test
+    void profileFormProvidesCurrentEligibilitySummaryAndMissingFields() {
+        UserProfileService profileService = mock(UserProfileService.class);
+        BookmarkService bookmarkService = mock(BookmarkService.class);
+        ProfileEligibilityUpdateService updateService =
+                mock(ProfileEligibilityUpdateService.class);
+        MyProfileController controller = new MyProfileController(
+                profileService, bookmarkService, updateService
+        );
+        Authentication authentication = authenticatedUser("user@example.com");
+        UserProfile profile = mock(UserProfile.class);
+        ProfileEligibilityUpdateResponse response = new ProfileEligibilityUpdateResponse(
+                false,
+                new ProfileEligibilityUpdateResponse.Summary(2, 3, 4),
+                List.of(new ProfileEligibilityUpdateResponse.MissingFieldSummary(
+                        ProfileField.EMPLOYMENT_STATUS, 3, 2
+                )),
+                List.of()
+        );
+        Model model = new ExtendedModelMap();
+
+        when(profileService.findByUserEmail("user@example.com")).thenReturn(profile);
+        when(updateService.recalculate(profile)).thenReturn(response);
+        when(bookmarkService.findMyBookmarks("user@example.com")).thenReturn(List.of());
+
+        String view = controller.profileForm(authentication, null, model);
+
+        assertThat(view).isEqualTo("user/my-profile");
+        assertThat(model.getAttribute("eligibilitySummary")).isEqualTo(response.summary());
+        assertThat(model.getAttribute("missingFieldSummaries"))
+                .isEqualTo(response.missingFieldSummaries());
+        assertThat(model.getAttribute("topMissingFieldNames"))
+                .isEqualTo(List.of("EMPLOYMENT_STATUS"));
     }
 
     @Test

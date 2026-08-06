@@ -23,6 +23,60 @@
     프로필이 저장되었습니다.
 </p>
 
+<section class="card profile-eligibility-summary" aria-labelledby="eligibilitySummaryTitle">
+    <div class="profile-eligibility-summary__header">
+        <div>
+            <h2 id="eligibilitySummaryTitle">내 조건으로 확인한 정책</h2>
+            <p class="muted">프로필을 입력하면 정책 판정 결과가 바로 갱신됩니다.</p>
+        </div>
+        <a id="eligibleBenefitsLink" class="button"
+           th:href="@{/benefits}"
+           th:text="|신청 가능 정책 ${eligibilitySummary.eligibleCount}개 보기|">
+            내가 받을 수 있는 정책 보기
+        </a>
+    </div>
+
+    <div class="eligibility-summary-grid" aria-live="polite" aria-atomic="true">
+        <article class="eligibility-summary-item eligibility-summary-item--eligible">
+            <span class="eligibility-summary-item__label">신청 가능</span>
+            <strong id="eligibleCount" th:text="|${eligibilitySummary.eligibleCount}개|">0개</strong>
+            <p>현재 입력한 정보 기준 신청 대상에 해당해요</p>
+        </article>
+        <article class="eligibility-summary-item eligibility-summary-item--need-info">
+            <span class="eligibility-summary-item__label">추가 정보 필요</span>
+            <strong id="needMoreInfoCount" th:text="|${eligibilitySummary.needMoreInfoCount}개|">0개</strong>
+            <p>추가 정보를 입력하면 더 정확히 확인할 수 있어요</p>
+        </article>
+        <article class="eligibility-summary-item eligibility-summary-item--ineligible">
+            <span class="eligibility-summary-item__label">현재 조건 불일치</span>
+            <strong id="ineligibleCount" th:text="|${eligibilitySummary.ineligibleCount}개|">0개</strong>
+            <p>현재 입력한 정보 기준 일부 조건이 맞지 않아요</p>
+        </article>
+    </div>
+
+    <div id="missingFieldGuides" class="missing-field-guides" aria-live="polite">
+        <p class="missing-field-guides__title" th:if="${!missingFieldSummaries.isEmpty()}">
+            정보를 더 입력하면 확인 가능한 정책이 늘어날 수 있어요.
+        </p>
+        <ul>
+            <li th:each="missing : ${missingFieldSummaries}"
+                th:attr="data-field=${missing.field.name()},data-affected-count=${missing.affectedPolicyCount},data-single-count=${missing.singleMissingPolicyCount}">
+                <span th:if="${missing.singleMissingPolicyCount > 0}"
+                      th:text="|${missing.field.label} 정보를 입력하면 ${missing.singleMissingPolicyCount}개 정책을 더 확인할 수 있어요.|">
+                </span>
+                <span th:unless="${missing.singleMissingPolicyCount > 0}"
+                      th:text="|${missing.field.label} 정보가 필요한 정책이 ${missing.affectedPolicyCount}개 있어요.|">
+                </span>
+            </li>
+        </ul>
+    </div>
+
+    <p class="eligibility-disclaimer">
+        본 결과는 입력한 정보와 등록된 정책 조건을 기준으로 한 사전 확인 결과이며,
+        최종 자격은 신청기관의 심사를 통해 결정됩니다.
+    </p>
+</section>
+
 <h3 th:if="${hasProfile}">프로필 수정</h3>
 <h3 th:unless="${hasProfile}">프로필 등록</h3>
 
@@ -38,7 +92,8 @@
     </p>
 </div>
 
-<form class="card profile-form" th:action="@{/my/profile}" method="post">
+<form id="profileForm" class="card profile-form" th:action="@{/my/profile}" method="post"
+      data-auto-save-url="/api/my/profile">
 
     <input type="hidden"
            name="returnBenefitId"
@@ -46,23 +101,28 @@
            th:value="${returnBenefitId}">
 
     <div class="profile-form__grid">
-        <div class="form-field">
+        <div class="form-field" data-profile-field="BIRTH_DATE"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'BIRTH_DATE')} ? ' form-field--recommended' : ''">
             <label for="birthDate">생년월일</label>
             <input type="date" id="birthDate" name="birthDate"
+                   data-auto-save-field="birthDate"
                    th:value="${profile != null ? profile.birthDate : ''}">
             <span class="field-help" th:if="${profile != null && profile.birthDate == null && profile.age != null}"
                   th:text="|기존 나이 ${profile.age}세가 저장되어 있습니다. 생년월일을 입력하면 새 값이 우선 적용됩니다.|">
             </span>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" data-profile-field="HOUSEHOLD_SIZE"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'HOUSEHOLD_SIZE')} ? ' form-field--recommended' : ''">
             <label for="householdSize">가구원 수</label>
             <input type="number" id="householdSize" name="householdSize" min="1"
+                   data-auto-save-field="householdSize"
                    placeholder="예: 1"
                    th:value="${profile != null ? profile.householdSize : ''}">
         </div>
 
-        <div class="form-field profile-form__wide">
+        <div class="form-field profile-form__wide" data-profile-field="REGION"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'REGION')} ? ' form-field--recommended' : ''">
             <label for="address">거주지</label>
             <div class="input-with-action">
                 <input type="text" id="address" name="address"
@@ -72,23 +132,28 @@
             </div>
             <input type="text" id="regionCode" name="regionCode"
                    class="region-code-input"
+                   data-auto-save-field="regionCode"
                    aria-label="정책 판정용 거주 지역"
                    placeholder="주소 검색 시 시/도·시/군/구가 자동 입력됩니다"
                    th:value="${profile != null ? profile.regionCode : ''}" readonly>
             <span class="field-help">상세 주소는 유지하고, 정책 판정에는 시/도·시/군/구 정보를 우선 사용합니다.</span>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" data-profile-field="MONTHLY_EARNED_INCOME"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'MONTHLY_EARNED_INCOME')} ? ' form-field--recommended' : ''">
             <label for="monthlyEarnedIncome">월 근로·사업소득</label>
             <input type="number" id="monthlyEarnedIncome" name="monthlyEarnedIncome" min="0"
+                   data-auto-save-field="monthlyEarnedIncome"
                    placeholder="모르면 비워두세요"
                    th:value="${profile != null ? profile.eligibilityMonthlyEarnedIncome : ''}">
             <span class="field-help">세전 기준 원 단위로 입력합니다. 소득이 없다면 0을 입력하세요.</span>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" data-profile-field="EMPLOYMENT_STATUS"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'EMPLOYMENT_STATUS')} ? ' form-field--recommended' : ''">
             <label for="employmentStatus">취업 상태</label>
-            <select id="employmentStatus" name="employmentStatus">
+            <select id="employmentStatus" name="employmentStatus"
+                    data-auto-save-field="employmentStatus">
                 <option value="">선택 안 함</option>
                 <option th:each="status : ${employmentStatuses}"
                         th:value="${status.name()}"
@@ -98,9 +163,11 @@
             </select>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" data-profile-field="EDUCATION_STATUS"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'EDUCATION_STATUS')} ? ' form-field--recommended' : ''">
             <label for="educationStatus">학적 상태</label>
-            <select id="educationStatus" name="educationStatus">
+            <select id="educationStatus" name="educationStatus"
+                    data-auto-save-field="educationStatus">
                 <option value="">선택 안 함</option>
                 <option th:each="status : ${educationStatuses}"
                         th:value="${status.name()}"
@@ -110,9 +177,11 @@
             </select>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" data-profile-field="HOUSING_OWNERSHIP_STATUS"
+             th:classappend="${#lists.contains(topMissingFieldNames, 'HOUSING_OWNERSHIP_STATUS')} ? ' form-field--recommended' : ''">
             <label for="housingOwnershipStatus">주택 소유 상태</label>
-            <select id="housingOwnershipStatus" name="housingOwnershipStatus">
+            <select id="housingOwnershipStatus" name="housingOwnershipStatus"
+                    data-auto-save-field="housingOwnershipStatus">
                 <option value="">선택 안 함</option>
                 <option th:each="status : ${housingOwnershipStatuses}"
                         th:value="${status.name()}"
@@ -123,9 +192,15 @@
         </div>
     </div>
 
-    <button type="submit"
-            th:text="${hasProfile ? '프로필 수정' : '프로필 등록'}">
-    </button>
+    <div class="profile-save-row">
+        <span id="profileSaveStatus" class="profile-save-status" aria-live="polite">
+            변경 내용은 자동으로 저장됩니다.
+        </span>
+
+        <button type="submit"
+                th:text="${hasProfile ? '전체 내용 저장' : '프로필 등록'}">
+        </button>
+    </div>
 
 </form>
 
@@ -175,18 +250,7 @@
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-
-<script>
-    function searchAddress() {
-        new daum.Postcode({
-            oncomplete: function(data) {
-                document.getElementById("address").value = data.address;
-                document.getElementById("regionCode").value =
-                    [data.sido, data.sigungu].filter(Boolean).join(" ");
-            }
-        }).open();
-    }
-</script>
+<script th:src="@{/js/profile-auto-save.js}" defer></script>
 
 </body>
 </html>
