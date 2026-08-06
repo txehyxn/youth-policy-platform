@@ -151,6 +151,34 @@ public class UserProfile {
         return age;
     }
 
+    public void updateProfileInputs(
+            LocalDate birthDate,
+            String address,
+            String regionCode,
+            Integer householdSize,
+            Long monthlyEarnedIncome,
+            Integer middleIncomePercent,
+            EmploymentStatus employmentStatus,
+            EducationStatus educationStatus,
+            HousingOwnershipStatus housingOwnershipStatus
+    ) {
+        this.birthDate = birthDate;
+        this.address = address;
+        this.regionCode = regionCode;
+        this.householdSize = householdSize;
+        this.monthlyEarnedIncome = monthlyEarnedIncome;
+        this.middleIncomePercent = middleIncomePercent;
+        this.employmentStatus = employmentStatus;
+        this.educationStatus = educationStatus;
+        this.housingOwnershipStatus = housingOwnershipStatus;
+
+        // 새 프로필 화면에서 저장한 뒤에는 신규 필드가 우선 판정값이 된다.
+        this.monthlyIncome = null;
+        this.employed = null;
+        this.student = null;
+        this.houseOwner = null;
+    }
+
     public Long getEligibilityMonthlyEarnedIncome() {
         if (monthlyEarnedIncome != null) {
             return monthlyEarnedIncome;

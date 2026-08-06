@@ -12,142 +12,116 @@
 
 <h1>내 프로필</h1>
 
-<p>
-    Eligibility Engine에서 사용할 정보를 입력해주세요.
+<p class="muted">
+    입력한 정보가 많아질수록 내 조건에 맞는 정책을 더 정확하게 확인할 수 있습니다.
+    모르는 항목은 비워두고 나중에 입력해도 됩니다.
 </p>
 
 <hr>
 
-<p th:if="${param.saved}" style="color: green;">
+<p class="alert alert--success" th:if="${param.saved}">
     프로필이 저장되었습니다.
 </p>
 
 <h3 th:if="${hasProfile}">프로필 수정</h3>
 <h3 th:unless="${hasProfile}">프로필 등록</h3>
 
-<!-- 자동 계산된 중위소득 결과 표시 (직접 입력 아님) -->
-<div th:if="${hasProfile}"
-     style="background:#f5f5f5; padding:10px; margin-bottom:15px;">
-    <strong>내 소득분위(자동계산): </strong>
-    <span th:text="${profile.middleIncomePercent} + '%'"></span>
-
-    <p style="font-size:12px; color:#666;">
-        ※ 입력하신 월소득과 가구원 수를 기준으로 자동 계산된 참고용 수치입니다.
-        재산 등은 반영되지 않아 정부 공식 소득분위와 다를 수 있습니다.
-        정확한 값은 복지로(bokjiro.go.kr)에서 확인하세요.
+<div class="card profile-income-summary" th:if="${hasProfile}">
+    <strong>중위소득 비율 참고값</strong>
+    <span th:if="${profile.middleIncomePercent != null}"
+          th:text="${profile.middleIncomePercent} + '%'">0%</span>
+    <span class="muted" th:unless="${profile.middleIncomePercent != null}">
+        월 근로·사업소득과 가구원 수를 입력하면 계산됩니다.
+    </span>
+    <p class="field-help">
+        입력한 소득과 가구원 수만으로 계산한 참고값이며, 공식 심사 결과와 다를 수 있습니다.
     </p>
 </div>
 
-<form th:action="@{/my/profile}" method="post">
+<form class="card profile-form" th:action="@{/my/profile}" method="post">
 
     <input type="hidden"
            name="returnBenefitId"
            th:if="${returnBenefitId != null}"
            th:value="${returnBenefitId}">
 
-    <table>
-        <tr>
-            <td>나이</td>
-            <td>
-                <input type="number" name="age" min="0"
-                       th:value="${profile != null ? profile.age : ''}" required>
-            </td>
-        </tr>
+    <div class="profile-form__grid">
+        <div class="form-field">
+            <label for="birthDate">생년월일</label>
+            <input type="date" id="birthDate" name="birthDate"
+                   th:value="${profile != null ? profile.birthDate : ''}">
+            <span class="field-help" th:if="${profile != null && profile.birthDate == null && profile.age != null}"
+                  th:text="|기존 나이 ${profile.age}세가 저장되어 있습니다. 생년월일을 입력하면 새 값이 우선 적용됩니다.|">
+            </span>
+        </div>
 
-        <tr>
-            <td>주소</td>
-            <td>
-                <input type="text"
-                       id="address"
-                       name="address"
-                       placeholder="주소 검색 버튼을 눌러 입력하세요"
-                       th:value="${profile != null ? profile.address : ''}"
-                       readonly
-                       required>
+        <div class="form-field">
+            <label for="householdSize">가구원 수</label>
+            <input type="number" id="householdSize" name="householdSize" min="1"
+                   placeholder="예: 1"
+                   th:value="${profile != null ? profile.householdSize : ''}">
+        </div>
 
-                <button type="button" onclick="searchAddress()">
-                    주소 검색
-                </button>
-            </td>
-        </tr>
+        <div class="form-field profile-form__wide">
+            <label for="address">거주지</label>
+            <div class="input-with-action">
+                <input type="text" id="address" name="address"
+                       placeholder="주소 검색으로 입력하세요"
+                       th:value="${profile != null ? profile.address : ''}" readonly>
+                <button type="button" class="button--secondary" onclick="searchAddress()">주소 검색</button>
+            </div>
+            <input type="text" id="regionCode" name="regionCode"
+                   class="region-code-input"
+                   aria-label="정책 판정용 거주 지역"
+                   placeholder="주소 검색 시 시/도·시/군/구가 자동 입력됩니다"
+                   th:value="${profile != null ? profile.regionCode : ''}" readonly>
+            <span class="field-help">상세 주소는 유지하고, 정책 판정에는 시/도·시/군/구 정보를 우선 사용합니다.</span>
+        </div>
 
-        <tr>
-            <td>가구원 수</td>
-            <td>
-                <input type="number" name="householdSize" min="1"
-                       th:value="${profile != null ? profile.householdSize : ''}" required>
-            </td>
-        </tr>
+        <div class="form-field">
+            <label for="monthlyEarnedIncome">월 근로·사업소득</label>
+            <input type="number" id="monthlyEarnedIncome" name="monthlyEarnedIncome" min="0"
+                   placeholder="모르면 비워두세요"
+                   th:value="${profile != null ? profile.eligibilityMonthlyEarnedIncome : ''}">
+            <span class="field-help">세전 기준 원 단위로 입력합니다. 소득이 없다면 0을 입력하세요.</span>
+        </div>
 
-        <tr>
-            <td>월 소득 (원)</td>
-            <td>
-                <input type="number" name="monthlyIncome" min="0"
-                       th:value="${profile != null ? profile.monthlyIncome : ''}" required>
-                <span style="font-size:12px; color:#666;">
-                    세전 월급 기준으로 입력해주세요 (예: 2500000)
-                </span>
-            </td>
-        </tr>
+        <div class="form-field">
+            <label for="employmentStatus">취업 상태</label>
+            <select id="employmentStatus" name="employmentStatus">
+                <option value="">선택 안 함</option>
+                <option th:each="status : ${employmentStatuses}"
+                        th:value="${status.name()}"
+                        th:text="${status.label}"
+                        th:selected="${profile != null && profile.eligibilityEmploymentStatus == status}">
+                </option>
+            </select>
+        </div>
 
-        <tr>
-            <td>연 소득 (원)</td>
-            <td>
-                <input type="number" name="annualIncome" min="0"
-                       th:value="${profile != null ? profile.annualIncome : ''}" required>
-            </td>
-        </tr>
+        <div class="form-field">
+            <label for="educationStatus">학적 상태</label>
+            <select id="educationStatus" name="educationStatus">
+                <option value="">선택 안 함</option>
+                <option th:each="status : ${educationStatuses}"
+                        th:value="${status.name()}"
+                        th:text="${status.label}"
+                        th:selected="${profile != null && profile.eligibilityEducationStatus == status}">
+                </option>
+            </select>
+        </div>
 
-        <tr>
-            <td>취업 여부</td>
-            <td>
-                <label>
-                    <input type="radio" name="employed" value="true"
-                           th:checked="${profile != null && profile.employed}">
-                    예
-                </label>
-                <label>
-                    <input type="radio" name="employed" value="false"
-                           th:checked="${profile == null || !profile.employed}">
-                    아니오
-                </label>
-            </td>
-        </tr>
-
-        <tr>
-            <td>학생 여부</td>
-            <td>
-                <label>
-                    <input type="radio" name="student" value="true"
-                           th:checked="${profile != null && profile.student}">
-                    예
-                </label>
-                <label>
-                    <input type="radio" name="student" value="false"
-                           th:checked="${profile == null || !profile.student}">
-                    아니오
-                </label>
-            </td>
-        </tr>
-
-        <tr>
-            <td>자가 보유 여부</td>
-            <td>
-                <label>
-                    <input type="radio" name="houseOwner" value="true"
-                           th:checked="${profile != null && profile.houseOwner}">
-                    예
-                </label>
-                <label>
-                    <input type="radio" name="houseOwner" value="false"
-                           th:checked="${profile == null || !profile.houseOwner}">
-                    아니오
-                </label>
-            </td>
-        </tr>
-    </table>
-
-    <br>
+        <div class="form-field">
+            <label for="housingOwnershipStatus">주택 소유 상태</label>
+            <select id="housingOwnershipStatus" name="housingOwnershipStatus">
+                <option value="">선택 안 함</option>
+                <option th:each="status : ${housingOwnershipStatuses}"
+                        th:value="${status.name()}"
+                        th:text="${status.label}"
+                        th:selected="${profile != null && profile.eligibilityHousingOwnershipStatus == status}">
+                </option>
+            </select>
+        </div>
+    </div>
 
     <button type="submit"
             th:text="${hasProfile ? '프로필 수정' : '프로필 등록'}">
@@ -207,6 +181,8 @@
         new daum.Postcode({
             oncomplete: function(data) {
                 document.getElementById("address").value = data.address;
+                document.getElementById("regionCode").value =
+                    [data.sido, data.sigungu].filter(Boolean).join(" ");
             }
         }).open();
     }

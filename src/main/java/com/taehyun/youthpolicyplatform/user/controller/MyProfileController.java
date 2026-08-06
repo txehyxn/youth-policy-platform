@@ -1,7 +1,11 @@
 package com.taehyun.youthpolicyplatform.user.controller;
 
 import com.taehyun.youthpolicyplatform.bookmark.service.BookmarkService;
+import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
+import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
+import com.taehyun.youthpolicyplatform.user.dto.UserProfileRequest;
 import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -44,6 +48,9 @@ public class MyProfileController {
                 bookmarkService.findMyBookmarks(authentication.getName())
         );
         model.addAttribute("returnBenefitId", returnBenefitId);
+        model.addAttribute("employmentStatuses", EmploymentStatus.values());
+        model.addAttribute("educationStatuses", EducationStatus.values());
+        model.addAttribute("housingOwnershipStatuses", HousingOwnershipStatus.values());
 
         return "user/my-profile";
     }
@@ -51,27 +58,13 @@ public class MyProfileController {
     @PostMapping("/my/profile")
     public String saveProfile(
             Authentication authentication,
-            @RequestParam Integer age,
-            @RequestParam String address,
-            @RequestParam Integer householdSize,
-            @RequestParam Integer monthlyIncome,
-            @RequestParam Integer annualIncome,
-            @RequestParam Boolean employed,
-            @RequestParam Boolean student,
-            @RequestParam Boolean houseOwner,
+            @ModelAttribute UserProfileRequest profileRequest,
             @RequestParam(required = false) Long returnBenefitId
     ) {
 
-        userProfileService.saveForLoggedInUser(
+        userProfileService.saveProfileInputsForLoggedInUser(
                 authentication.getName(),
-                age,
-                address,
-                householdSize,
-                monthlyIncome,
-                annualIncome,
-                employed,
-                student,
-                houseOwner
+                profileRequest
         );
 
         if (returnBenefitId != null) {

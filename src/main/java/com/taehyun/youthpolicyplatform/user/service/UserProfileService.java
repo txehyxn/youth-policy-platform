@@ -3,6 +3,7 @@ package com.taehyun.youthpolicyplatform.user.service;
 import com.taehyun.youthpolicyplatform.user.domain.Role;
 import com.taehyun.youthpolicyplatform.user.domain.User;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
+import com.taehyun.youthpolicyplatform.user.dto.UserProfileRequest;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import com.taehyun.youthpolicyplatform.user.repository.UserRepository;
 import com.taehyun.youthpolicyplatform.user.util.IncomeCalculator;
@@ -122,5 +123,70 @@ public class UserProfileService {
 
                     return userProfileRepository.save(profile);
                 });
+    }
+
+    public UserProfile saveProfileInputsForLoggedInUser(
+            String email,
+            UserProfileRequest request
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        String address = trimToNull(request.getAddress());
+        String regionCode = trimToNull(request.getRegionCode());
+        Integer middleIncomePercent = IncomeCalculator.calculateMiddleIncomePercent(
+                request.getMonthlyEarnedIncome(),
+                request.getHouseholdSize()
+        );
+
+        return userProfileRepository.findByUser(user)
+                .map(profile -> {
+                    profile.updateProfileInputs(
+                            request.getBirthDate(),
+                            address,
+                            regionCode,
+                            request.getHouseholdSize(),
+                            request.getMonthlyEarnedIncome(),
+                            middleIncomePercent,
+                            request.getEmploymentStatus(),
+                            request.getEducationStatus(),
+                            request.getHousingOwnershipStatus()
+                    );
+                    return userProfileRepository.save(profile);
+                })
+                .orElseGet(() -> {
+                    UserProfile profile = new UserProfile(
+                            request.getBirthDate(),
+                            regionCode,
+                            request.getHouseholdSize(),
+                            request.getMonthlyEarnedIncome(),
+                            null,
+                            null,
+                            middleIncomePercent,
+                            request.getEmploymentStatus(),
+                            request.getEducationStatus(),
+                            request.getHousingOwnershipStatus(),
+                            user
+                    );
+                    profile.updateProfileInputs(
+                            request.getBirthDate(),
+                            address,
+                            regionCode,
+                            request.getHouseholdSize(),
+                            request.getMonthlyEarnedIncome(),
+                            middleIncomePercent,
+                            request.getEmploymentStatus(),
+                            request.getEducationStatus(),
+                            request.getHousingOwnershipStatus()
+                    );
+                    return userProfileRepository.save(profile);
+                });
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

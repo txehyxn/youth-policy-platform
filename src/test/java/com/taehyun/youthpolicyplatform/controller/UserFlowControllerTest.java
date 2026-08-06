@@ -12,12 +12,17 @@ import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
 import com.taehyun.youthpolicyplatform.eligibility.service.EligibilityService;
 import com.taehyun.youthpolicyplatform.user.controller.MyProfileController;
 import com.taehyun.youthpolicyplatform.user.controller.UserController;
+import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
+import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.dto.SignupRequest;
+import com.taehyun.youthpolicyplatform.user.dto.UserProfileRequest;
 import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
 import com.taehyun.youthpolicyplatform.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -31,6 +36,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 class UserFlowControllerTest {
 
@@ -111,32 +120,59 @@ class UserFlowControllerTest {
         BookmarkService bookmarkService = mock(BookmarkService.class);
         MyProfileController controller = new MyProfileController(profileService, bookmarkService);
         Authentication authentication = authenticatedUser("user@example.com");
+        UserProfileRequest request = new UserProfileRequest();
+        request.setBirthDate(LocalDate.of(2001, 5, 10));
+        request.setAddress("서울특별시 마포구");
+        request.setRegionCode("서울특별시 마포구");
+        request.setHouseholdSize(1);
+        request.setMonthlyEarnedIncome(2_000_000L);
+        request.setEmploymentStatus(EmploymentStatus.EMPLOYED);
+        request.setEducationStatus(EducationStatus.GRADUATED);
+        request.setHousingOwnershipStatus(HousingOwnershipStatus.NO_HOME);
 
         String view = controller.saveProfile(
                 authentication,
-                25,
-                "서울특별시 마포구",
-                1,
-                2_000_000,
-                24_000_000,
-                true,
-                false,
-                false,
+                request,
                 7L
         );
 
         assertThat(view).isEqualTo("redirect:/benefits/7?profileSaved=true");
-        verify(profileService).saveForLoggedInUser(
-                "user@example.com",
-                25,
-                "서울특별시 마포구",
-                1,
-                2_000_000,
-                24_000_000,
-                true,
-                false,
-                false
+        verify(profileService).saveProfileInputsForLoggedInUser(
+                "user@example.com", request
         );
+    }
+
+    @Test
+    void profileFormBindsBlankOptionalValuesAsNull() throws Exception {
+        UserProfileService profileService = mock(UserProfileService.class);
+        BookmarkService bookmarkService = mock(BookmarkService.class);
+        MyProfileController controller = new MyProfileController(profileService, bookmarkService);
+        Authentication authentication = authenticatedUser("user@example.com");
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(post("/my/profile")
+                        .principal(authentication)
+                        .param("birthDate", "")
+                        .param("monthlyEarnedIncome", "")
+                        .param("employmentStatus", "")
+                        .param("educationStatus", "")
+                        .param("housingOwnershipStatus", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/my/profile?saved=true"));
+
+        org.mockito.ArgumentCaptor<UserProfileRequest> requestCaptor =
+                org.mockito.ArgumentCaptor.forClass(UserProfileRequest.class);
+        verify(profileService).saveProfileInputsForLoggedInUser(
+                org.mockito.ArgumentMatchers.eq("user@example.com"),
+                requestCaptor.capture()
+        );
+
+        UserProfileRequest request = requestCaptor.getValue();
+        assertThat(request.getBirthDate()).isNull();
+        assertThat(request.getMonthlyEarnedIncome()).isNull();
+        assertThat(request.getEmploymentStatus()).isNull();
+        assertThat(request.getEducationStatus()).isNull();
+        assertThat(request.getHousingOwnershipStatus()).isNull();
     }
 
     @Test
