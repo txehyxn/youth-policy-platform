@@ -16,7 +16,12 @@ public enum ProfileField {
     MIDDLE_INCOME_PERCENT("middleIncomePercent", "중위소득"),
     EMPLOYMENT_STATUS("employmentStatus", "취업 상태", "employed"),
     EDUCATION_STATUS("educationStatus", "학적 상태", "student"),
-    HOUSING_OWNERSHIP_STATUS("housingOwnershipStatus", "주택 소유 상태", "houseOwner");
+    HOUSING_OWNERSHIP_STATUS("housingOwnershipStatus", "주택 소유 상태", "houseOwner"),
+    GRADUATION_DATE("graduationDate", "졸업 시점"),
+    GRADUATION_MONTHS("graduationMonths", "졸업 후 경과 기간"),
+    EMPLOYMENT_TYPE("employmentType", "고용 형태"),
+    SME_EMPLOYEE("smeEmployee", "중소기업 재직 여부"),
+    JOB_SEEKING_STATUS("jobSeekingStatus", "구직 상태");
 
     private final String key;
     private final String label;

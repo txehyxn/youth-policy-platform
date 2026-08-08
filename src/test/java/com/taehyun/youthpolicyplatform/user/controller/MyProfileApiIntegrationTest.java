@@ -5,7 +5,9 @@ import com.taehyun.youthpolicyplatform.benefit.domain.BenefitCondition;
 import com.taehyun.youthpolicyplatform.benefit.repository.BenefitRepository;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import com.taehyun.youthpolicyplatform.user.domain.Role;
 import com.taehyun.youthpolicyplatform.user.domain.User;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
@@ -311,6 +313,80 @@ class MyProfileApiIntegrationTest {
                         .content("{\"address\":\"" + "나".repeat(256) + "\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.field").value("address"));
+    }
+
+    @Test
+    void patchesAdditionalProfileFieldsAndKeepsOtherValues() throws Exception {
+        String email = "patch-additional@example.com";
+        UserProfile profile = saveCompleteProfile(email);
+
+        mockMvc.perform(patch("/api/my/profile")
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "graduationDate":"2025-02-15",
+                                  "employmentType":"CONTRACT",
+                                  "smeEmployee":false,
+                                  "jobSeekingStatus":"REGISTERED"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        UserProfile updated = userProfileRepository.findById(profile.getId()).orElseThrow();
+        assertThat(updated.getGraduationDate()).isEqualTo(LocalDate.of(2025, 2, 15));
+        assertThat(updated.getEmploymentType()).isEqualTo(EmploymentType.CONTRACT);
+        assertThat(updated.getSmeEmployee()).isFalse();
+        assertThat(updated.getJobSeekingStatus()).isEqualTo(JobSeekingStatus.REGISTERED);
+        assertThat(updated.getBirthDate()).isEqualTo(LocalDate.of(2000, 1, 1));
+        assertThat(updated.getMonthlyEarnedIncome()).isEqualTo(2_000_000L);
+    }
+
+    @Test
+    void explicitNullClearsAdditionalFieldsAndKeepsFalseDistinct() throws Exception {
+        String email = "patch-additional-null@example.com";
+        UserProfile profile = saveCompleteProfile(email);
+        profile.updateGraduationDate(LocalDate.of(2025, 2, 15));
+        profile.updateEmploymentType(EmploymentType.FULL_TIME);
+        profile.updateSmeEmployee(true);
+        profile.updateJobSeekingStatus(JobSeekingStatus.REGISTERED);
+
+        mockMvc.perform(patch("/api/my/profile")
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "graduationDate":null,
+                                  "employmentType":null,
+                                  "smeEmployee":false,
+                                  "jobSeekingStatus":null
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        UserProfile updated = userProfileRepository.findById(profile.getId()).orElseThrow();
+        assertThat(updated.getGraduationDate()).isNull();
+        assertThat(updated.getEmploymentType()).isNull();
+        assertThat(updated.getSmeEmployee()).isFalse();
+        assertThat(updated.getJobSeekingStatus()).isNull();
+    }
+
+    @Test
+    void mapsMissingGraduationMonthsToGraduationDate() throws Exception {
+        String email = "patch-missing-graduation@example.com";
+        saveEmptyProfile(email);
+        Benefit benefit = saveBenefitWithCondition("graduationMonths", "<=", "24");
+
+        mockMvc.perform(patch("/api/my/profile")
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(
+                        "$.benefits[?(@.benefitId == " + benefit.getId() + ")].missingFields[0]"
+                ).value(hasItem("GRADUATION_DATE")))
+                .andExpect(jsonPath("$.missingFieldSummaries[0].field")
+                        .value("GRADUATION_DATE"));
     }
 
     private UserProfile saveCompleteProfile(String email) {

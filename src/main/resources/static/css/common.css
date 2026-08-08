@@ -425,6 +425,21 @@ textarea {
     grid-column: 1 / -1;
 }
 
+.profile-additional-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.profile-additional-section__header {
+    margin-bottom: 1rem;
+}
+
+.profile-additional-section__header h3,
+.profile-additional-section__header p {
+    margin-top: 0;
+}
+
 .form-field {
     display: flex;
     flex-direction: column;

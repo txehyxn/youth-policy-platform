@@ -130,6 +130,9 @@ public class ProfileEligibilityUpdateService {
         if (conditionField == ProfileField.AGE) {
             return ProfileField.BIRTH_DATE;
         }
+        if (conditionField == ProfileField.GRADUATION_MONTHS) {
+            return ProfileField.GRADUATION_DATE;
+        }
         return conditionField;
     }
 }

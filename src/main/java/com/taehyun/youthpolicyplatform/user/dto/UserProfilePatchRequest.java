@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -25,6 +27,10 @@ public class UserProfilePatchRequest {
     private EmploymentStatus employmentStatus;
     private EducationStatus educationStatus;
     private HousingOwnershipStatus housingOwnershipStatus;
+    private LocalDate graduationDate;
+    private EmploymentType employmentType;
+    private Boolean smeEmployee;
+    private JobSeekingStatus jobSeekingStatus;
 
     @JsonSetter("birthDate")
     public void setBirthDate(LocalDate birthDate) {
@@ -74,6 +80,30 @@ public class UserProfilePatchRequest {
     ) {
         presentFields.add("housingOwnershipStatus");
         this.housingOwnershipStatus = housingOwnershipStatus;
+    }
+
+    @JsonSetter("graduationDate")
+    public void setGraduationDate(LocalDate graduationDate) {
+        presentFields.add("graduationDate");
+        this.graduationDate = graduationDate;
+    }
+
+    @JsonSetter("employmentType")
+    public void setEmploymentType(EmploymentType employmentType) {
+        presentFields.add("employmentType");
+        this.employmentType = employmentType;
+    }
+
+    @JsonSetter("smeEmployee")
+    public void setSmeEmployee(Boolean smeEmployee) {
+        presentFields.add("smeEmployee");
+        this.smeEmployee = smeEmployee;
+    }
+
+    @JsonSetter("jobSeekingStatus")
+    public void setJobSeekingStatus(JobSeekingStatus jobSeekingStatus) {
+        presentFields.add("jobSeekingStatus");
+        this.jobSeekingStatus = jobSeekingStatus;
     }
 
     public boolean hasField(String fieldName) {

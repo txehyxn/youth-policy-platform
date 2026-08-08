@@ -40,6 +40,11 @@ public class ConditionDisplayUtil {
             case "educationStatus" -> "학적 상태";
             case "houseOwner" -> "주택 보유 여부";
             case "housingOwnershipStatus" -> "주택 소유 상태";
+            case "graduationDate" -> "졸업 시점";
+            case "graduationMonths" -> "졸업 후 경과 기간";
+            case "employmentType" -> "고용 형태";
+            case "smeEmployee" -> "중소기업 재직 여부";
+            case "jobSeekingStatus" -> "구직 상태";
             default -> fieldName;
         };
     }
@@ -71,9 +76,41 @@ public class ConditionDisplayUtil {
                     "annualIncome", "annualPersonalIncome",
                     "householdMonthlyIncome" -> value + "원";
             case "middleIncomePercent" -> value + "%";
+            case "graduationMonths" -> value + "개월";
+            case "smeEmployee" -> value.equals("true") ? "예" : "아니요";
+            case "employmentType" -> convertEnumValues(value, true);
+            case "jobSeekingStatus" -> convertEnumValues(value, false);
             case "region", "address" -> value + " 거주";
             case "employed", "student" -> value.equals("true") ? "예" : "아니오";
             case "houseOwner" -> value.equals("true") ? "주택 보유" : "무주택";
+            default -> value;
+        };
+    }
+
+    private static String convertEnumValues(String value, boolean employmentType) {
+        return java.util.Arrays.stream(value.split(","))
+                .map(String::trim)
+                .map(item -> employmentType ? employmentTypeLabel(item) : jobSeekingStatusLabel(item))
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    private static String employmentTypeLabel(String value) {
+        return switch (value) {
+            case "FULL_TIME" -> "정규직";
+            case "PART_TIME" -> "시간제·파트타임";
+            case "CONTRACT" -> "계약직";
+            case "DAILY" -> "일용직";
+            case "PLATFORM" -> "플랫폼 노동";
+            case "OTHER" -> "기타";
+            default -> value;
+        };
+    }
+
+    private static String jobSeekingStatusLabel(String value) {
+        return switch (value) {
+            case "REGISTERED" -> "구직 등록 중";
+            case "SEEKING_NOT_REGISTERED" -> "구직 중이지만 등록하지 않음";
+            case "NOT_SEEKING" -> "현재 구직 중이 아님";
             default -> value;
         };
     }

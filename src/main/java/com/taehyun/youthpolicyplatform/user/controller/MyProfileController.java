@@ -6,6 +6,8 @@ import com.taehyun.youthpolicyplatform.eligibility.service.ProfileEligibilityUpd
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.dto.UserProfileRequest;
 import com.taehyun.youthpolicyplatform.user.service.UserProfileService;
@@ -75,6 +77,8 @@ public class MyProfileController {
         model.addAttribute("employmentStatuses", EmploymentStatus.values());
         model.addAttribute("educationStatuses", EducationStatus.values());
         model.addAttribute("housingOwnershipStatuses", HousingOwnershipStatus.values());
+        model.addAttribute("employmentTypes", EmploymentType.values());
+        model.addAttribute("jobSeekingStatuses", JobSeekingStatus.values());
 
         return "user/my-profile";
     }

@@ -3,6 +3,8 @@ package com.taehyun.youthpolicyplatform.user.dto;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,4 +31,13 @@ public class UserProfileRequest {
     private EducationStatus educationStatus;
 
     private HousingOwnershipStatus housingOwnershipStatus;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate graduationDate;
+
+    private EmploymentType employmentType;
+
+    private Boolean smeEmployee;
+
+    private JobSeekingStatus jobSeekingStatus;
 }

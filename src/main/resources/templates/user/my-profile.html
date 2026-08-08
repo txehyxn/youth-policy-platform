@@ -207,6 +207,63 @@
         </div>
     </div>
 
+    <section class="profile-additional-section" aria-labelledby="additionalProfileTitle">
+        <div class="profile-additional-section__header">
+            <h3 id="additionalProfileTitle">추가 정책 확인을 위한 정보</h3>
+            <p class="field-help">필요한 항목만 입력해도 확인 가능한 정책이 바로 늘어납니다.</p>
+        </div>
+
+        <div class="profile-form__grid">
+            <div class="form-field" data-profile-field="GRADUATION_DATE"
+                 th:classappend="${#lists.contains(topMissingFieldNames, 'GRADUATION_DATE')} ? ' form-field--recommended' : ''">
+                <label for="graduationDate">졸업 시점</label>
+                <input type="date" id="graduationDate" name="graduationDate"
+                       data-auto-save-field="graduationDate"
+                       th:value="${profile != null ? profile.graduationDate : ''}">
+                <span class="field-help">최종 졸업 또는 중퇴 시점을 입력해주세요.</span>
+            </div>
+
+            <div class="form-field" data-profile-field="EMPLOYMENT_TYPE"
+                 th:classappend="${#lists.contains(topMissingFieldNames, 'EMPLOYMENT_TYPE')} ? ' form-field--recommended' : ''">
+                <label for="employmentType">고용 형태</label>
+                <select id="employmentType" name="employmentType"
+                        data-auto-save-field="employmentType">
+                    <option value="">선택 안 함</option>
+                    <option th:each="type : ${employmentTypes}"
+                            th:value="${type.name()}"
+                            th:text="${type.label}"
+                            th:selected="${profile != null && profile.employmentType == type}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-field" data-profile-field="SME_EMPLOYEE"
+                 th:classappend="${#lists.contains(topMissingFieldNames, 'SME_EMPLOYEE')} ? ' form-field--recommended' : ''">
+                <label for="smeEmployee">중소기업 재직 여부</label>
+                <select id="smeEmployee" name="smeEmployee"
+                        data-auto-save-field="smeEmployee">
+                    <option value="">선택 안 함</option>
+                    <option value="true" th:selected="${profile != null && profile.smeEmployee == true}">예</option>
+                    <option value="false" th:selected="${profile != null && profile.smeEmployee == false}">아니요</option>
+                </select>
+            </div>
+
+            <div class="form-field" data-profile-field="JOB_SEEKING_STATUS"
+                 th:classappend="${#lists.contains(topMissingFieldNames, 'JOB_SEEKING_STATUS')} ? ' form-field--recommended' : ''">
+                <label for="jobSeekingStatus">구직 상태</label>
+                <select id="jobSeekingStatus" name="jobSeekingStatus"
+                        data-auto-save-field="jobSeekingStatus">
+                    <option value="">선택 안 함</option>
+                    <option th:each="status : ${jobSeekingStatuses}"
+                            th:value="${status.name()}"
+                            th:text="${status.label}"
+                            th:selected="${profile != null && profile.jobSeekingStatus == status}">
+                    </option>
+                </select>
+            </div>
+        </div>
+    </section>
+
     <div class="profile-save-row">
         <span id="profileSaveStatus" class="profile-save-status" aria-live="polite">
             변경 내용은 자동으로 저장됩니다.

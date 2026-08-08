@@ -65,6 +65,16 @@ public class UserProfile {
     @Enumerated(EnumType.STRING)
     private HousingOwnershipStatus housingOwnershipStatus;
 
+    private LocalDate graduationDate;
+
+    @Enumerated(EnumType.STRING)
+    private EmploymentType employmentType;
+
+    private Boolean smeEmployee;
+
+    @Enumerated(EnumType.STRING)
+    private JobSeekingStatus jobSeekingStatus;
+
     // 해당 프로필을 작성한 회원
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -215,6 +225,22 @@ public class UserProfile {
     ) {
         this.housingOwnershipStatus = housingOwnershipStatus;
         this.houseOwner = null;
+    }
+
+    public void updateGraduationDate(LocalDate graduationDate) {
+        this.graduationDate = graduationDate;
+    }
+
+    public void updateEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
+    }
+
+    public void updateSmeEmployee(Boolean smeEmployee) {
+        this.smeEmployee = smeEmployee;
+    }
+
+    public void updateJobSeekingStatus(JobSeekingStatus jobSeekingStatus) {
+        this.jobSeekingStatus = jobSeekingStatus;
     }
 
     public void updateMiddleIncomePercent(Integer middleIncomePercent) {

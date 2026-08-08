@@ -156,6 +156,7 @@ public class UserProfileService {
                             request.getEducationStatus(),
                             request.getHousingOwnershipStatus()
                     );
+                    updateAdditionalProfileInputs(profile, request);
                     return userProfileRepository.save(profile);
                 })
                 .orElseGet(() -> {
@@ -183,6 +184,7 @@ public class UserProfileService {
                             request.getEducationStatus(),
                             request.getHousingOwnershipStatus()
                     );
+                    updateAdditionalProfileInputs(profile, request);
                     return userProfileRepository.save(profile);
                 });
     }
@@ -226,6 +228,18 @@ public class UserProfileService {
         if (request.hasField("housingOwnershipStatus")) {
             profile.updateHousingOwnershipStatus(request.getHousingOwnershipStatus());
         }
+        if (request.hasField("graduationDate")) {
+            profile.updateGraduationDate(request.getGraduationDate());
+        }
+        if (request.hasField("employmentType")) {
+            profile.updateEmploymentType(request.getEmploymentType());
+        }
+        if (request.hasField("smeEmployee")) {
+            profile.updateSmeEmployee(request.getSmeEmployee());
+        }
+        if (request.hasField("jobSeekingStatus")) {
+            profile.updateJobSeekingStatus(request.getJobSeekingStatus());
+        }
 
         if (request.hasField("householdSize")
                 || request.hasField("monthlyEarnedIncome")) {
@@ -238,6 +252,16 @@ public class UserProfileService {
         }
 
         return userProfileRepository.save(profile);
+    }
+
+    private void updateAdditionalProfileInputs(
+            UserProfile profile,
+            UserProfileRequest request
+    ) {
+        profile.updateGraduationDate(request.getGraduationDate());
+        profile.updateEmploymentType(request.getEmploymentType());
+        profile.updateSmeEmployee(request.getSmeEmployee());
+        profile.updateJobSeekingStatus(request.getJobSeekingStatus());
     }
 
     private void validatePatchRequest(UserProfilePatchRequest request) {

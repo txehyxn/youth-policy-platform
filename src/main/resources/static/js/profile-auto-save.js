@@ -22,7 +22,11 @@
         MONTHLY_EARNED_INCOME: "월 근로·사업소득",
         EMPLOYMENT_STATUS: "취업 상태",
         EDUCATION_STATUS: "학적 상태",
-        HOUSING_OWNERSHIP_STATUS: "주택 소유 상태"
+        HOUSING_OWNERSHIP_STATUS: "주택 소유 상태",
+        GRADUATION_DATE: "졸업 시점",
+        EMPLOYMENT_TYPE: "고용 형태",
+        SME_EMPLOYEE: "중소기업 재직 여부",
+        JOB_SEEKING_STATUS: "구직 상태"
     };
 
     let debounceTimer = null;
@@ -38,6 +42,9 @@
         }
         if (input.type === "number") {
             return Number(input.value);
+        }
+        if (input.dataset.autoSaveField === "smeEmployee") {
+            return input.value === "true";
         }
         return input.value;
     }

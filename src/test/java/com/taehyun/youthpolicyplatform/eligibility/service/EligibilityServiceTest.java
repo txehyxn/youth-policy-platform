@@ -7,7 +7,9 @@ import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EducationStatus;
 import com.taehyun.youthpolicyplatform.user.domain.EmploymentStatus;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
 import com.taehyun.youthpolicyplatform.user.domain.HousingOwnershipStatus;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -409,6 +414,108 @@ class EligibilityServiceTest {
         assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
     }
 
+    @Test
+    void evaluatesEmploymentTypeAndJobSeekingStatusLists() {
+        Benefit benefit = benefitWithConditions(
+                condition("employmentType", "IN", "CONTRACT, PART_TIME"),
+                condition("jobSeekingStatus", "NOT_IN", "NOT_SEEKING")
+        );
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        profile.updateEmploymentType(EmploymentType.CONTRACT);
+        profile.updateJobSeekingStatus(JobSeekingStatus.REGISTERED);
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void additionalEnumFieldsMoveFromMissingToEligibleOrIneligible() {
+        assertAdditionalEnumTransitions(
+                "employmentType", "IN", "CONTRACT,PART_TIME",
+                EmploymentType.CONTRACT, EmploymentType.FULL_TIME
+        );
+        assertAdditionalEnumTransitions(
+                "jobSeekingStatus", "IN", "REGISTERED,SEEKING_NOT_REGISTERED",
+                JobSeekingStatus.REGISTERED, JobSeekingStatus.NOT_SEEKING
+        );
+    }
+
+    @Test
+    void distinguishesSmeEmployeeTrueFalseAndMissing() {
+        Benefit benefit = benefitWithConditions(condition("smeEmployee", "==", "true"));
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+
+        profile.updateSmeEmployee(false);
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.INELIGIBLE);
+
+        profile.updateSmeEmployee(true);
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.ELIGIBLE);
+    }
+
+    @Test
+    void calculatesGraduationMonthsAtExactBoundary() {
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2026-08-08T00:00:00Z"), ZoneOffset.UTC
+        );
+        eligibilityService = new EligibilityService(
+                benefitRepository, userProfileRepository, fixedClock
+        );
+        Benefit benefit = benefitWithConditions(condition("graduationMonths", "<=", "24"));
+        UserProfile profile = newProfile(
+                LocalDate.of(2000, 1, 1), 0L,
+                EmploymentStatus.UNEMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        profile.updateGraduationDate(LocalDate.of(2024, 8, 8));
+        prepareRepositories(benefit, profile);
+
+        assertThat(eligibilityService.calculateGraduationMonths(profile.getGraduationDate()))
+                .isEqualTo(24L);
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.ELIGIBLE);
+
+        profile.updateGraduationDate(LocalDate.of(2024, 7, 8));
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.INELIGIBLE);
+    }
+
+    @Test
+    void missingGraduationDateRequiresMoreInformation() {
+        Benefit benefit = benefitWithConditions(condition("graduationMonths", "<=", "24"));
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.UNEMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        EligibilityResultDto result = eligibilityService.check(1L, 1L);
+
+        assertThat(result.getStatus()).isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+        assertThat(result.getConditionResults().getFirst().getMessage())
+                .contains("졸업 시점");
+    }
+
     private Benefit benefitWithConditions(BenefitCondition... conditions) {
         Benefit benefit = new Benefit(
                 "청년 지원 정책",
@@ -419,6 +526,42 @@ class EligibilityServiceTest {
         );
         benefit.getConditions().addAll(java.util.List.of(conditions));
         return benefit;
+    }
+
+    private void assertAdditionalEnumTransitions(
+            String fieldName,
+            String operator,
+            String conditionValue,
+            Enum<?> passingValue,
+            Enum<?> failingValue
+    ) {
+        Benefit benefit = benefitWithConditions(condition(fieldName, operator, conditionValue));
+        UserProfile profile = newProfile(
+                LocalDate.now().minusYears(26), 0L,
+                EmploymentStatus.EMPLOYED,
+                EducationStatus.GRADUATED,
+                HousingOwnershipStatus.NO_HOME
+        );
+        prepareRepositories(benefit, profile);
+
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.NEED_MORE_INFO);
+
+        updateAdditionalEnum(profile, passingValue);
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.ELIGIBLE);
+
+        updateAdditionalEnum(profile, failingValue);
+        assertThat(eligibilityService.check(1L, 1L).getStatus())
+                .isEqualTo(EligibilityStatus.INELIGIBLE);
+    }
+
+    private void updateAdditionalEnum(UserProfile profile, Enum<?> value) {
+        if (value instanceof EmploymentType employmentType) {
+            profile.updateEmploymentType(employmentType);
+        } else if (value instanceof JobSeekingStatus jobSeekingStatus) {
+            profile.updateJobSeekingStatus(jobSeekingStatus);
+        }
     }
 
     private BenefitCondition condition(String fieldName, String operator, String value) {

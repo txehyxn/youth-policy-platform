@@ -10,10 +10,15 @@ import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityResultDto;
 import com.taehyun.youthpolicyplatform.eligibility.dto.EligibilityStatus;
 import com.taehyun.youthpolicyplatform.user.domain.ProfileField;
 import com.taehyun.youthpolicyplatform.user.domain.UserProfile;
+import com.taehyun.youthpolicyplatform.user.domain.EmploymentType;
+import com.taehyun.youthpolicyplatform.user.domain.JobSeekingStatus;
 import com.taehyun.youthpolicyplatform.user.repository.UserProfileRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -21,11 +26,29 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class EligibilityService {
 
     private final BenefitRepository benefitRepository;
     private final UserProfileRepository userProfileRepository;
+    private final Clock clock;
+
+    @Autowired
+    public EligibilityService(
+            BenefitRepository benefitRepository,
+            UserProfileRepository userProfileRepository
+    ) {
+        this(benefitRepository, userProfileRepository, Clock.systemDefaultZone());
+    }
+
+    public EligibilityService(
+            BenefitRepository benefitRepository,
+            UserProfileRepository userProfileRepository,
+            Clock clock
+    ) {
+        this.benefitRepository = benefitRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.clock = clock;
+    }
 
     public EligibilityResultDto check(Long benefitId, Long profileId) {
 
@@ -158,6 +181,10 @@ public class EligibilityService {
             case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
                     ? profile.getEligibilityHouseOwner() == null
                     : profile.getEligibilityHousingOwnershipStatus() == null;
+            case GRADUATION_DATE, GRADUATION_MONTHS -> profile.getGraduationDate() == null;
+            case EMPLOYMENT_TYPE -> profile.getEmploymentType() == null;
+            case SME_EMPLOYEE -> profile.getSmeEmployee() == null;
+            case JOB_SEEKING_STATUS -> profile.getJobSeekingStatus() == null;
         };
     }
 
@@ -203,6 +230,13 @@ public class EligibilityService {
             case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
                     ? compareBoolean(profile.getEligibilityHouseOwner(), operator, value)
                     : compareEnum(profile.getEligibilityHousingOwnershipStatus(), operator, value);
+            case GRADUATION_DATE -> false;
+            case GRADUATION_MONTHS -> compareNumber(
+                    calculateGraduationMonths(profile.getGraduationDate()), operator, value
+            );
+            case EMPLOYMENT_TYPE -> compareEnum(profile.getEmploymentType(), operator, value);
+            case SME_EMPLOYEE -> compareBoolean(profile.getSmeEmployee(), operator, value);
+            case JOB_SEEKING_STATUS -> compareEnum(profile.getJobSeekingStatus(), operator, value);
         };
     }
 
@@ -241,6 +275,13 @@ public class EligibilityService {
             case HOUSING_OWNERSHIP_STATUS -> isLegacyKey(fieldName, "houseOwner")
                     ? booleanLabel(profile.getEligibilityHouseOwner(), "주택 보유", "무주택")
                     : enumLabel(profile.getEligibilityHousingOwnershipStatus());
+            case GRADUATION_DATE -> valueOrMissing(profile.getGraduationDate());
+            case GRADUATION_MONTHS -> valueOrMissing(
+                    calculateGraduationMonths(profile.getGraduationDate()), "개월"
+            );
+            case EMPLOYMENT_TYPE -> enumLabel(profile.getEmploymentType());
+            case SME_EMPLOYEE -> booleanLabel(profile.getSmeEmployee(), "예", "아니요");
+            case JOB_SEEKING_STATUS -> enumLabel(profile.getJobSeekingStatus());
         };
     }
 
@@ -273,6 +314,10 @@ public class EligibilityService {
             case "educationStatus" -> "학적 상태 조건을 충족하지 않습니다.";
             case "houseOwner" -> "주택 보유 여부 조건을 충족하지 않습니다.";
             case "housingOwnershipStatus" -> "주택 소유 상태 조건을 충족하지 않습니다.";
+            case "graduationMonths" -> "졸업 후 경과 기간 조건을 충족하지 않습니다.";
+            case "employmentType" -> "고용 형태 조건을 충족하지 않습니다.";
+            case "smeEmployee" -> "중소기업 재직 여부 조건을 충족하지 않습니다.";
+            case "jobSeekingStatus" -> "구직 상태 조건을 충족하지 않습니다.";
             default -> "조건을 충족하지 않습니다.";
         };
     }
@@ -293,6 +338,10 @@ public class EligibilityService {
             case "educationStatus" -> "학적 상태 조건을 충족했습니다.";
             case "houseOwner" -> "주택 보유 여부 조건을 충족했습니다.";
             case "housingOwnershipStatus" -> "주택 소유 상태 조건을 충족했습니다.";
+            case "graduationMonths" -> "졸업 후 경과 기간 조건을 충족했습니다.";
+            case "employmentType" -> "고용 형태 조건을 충족했습니다.";
+            case "smeEmployee" -> "중소기업 재직 여부 조건을 충족했습니다.";
+            case "jobSeekingStatus" -> "구직 상태 조건을 충족했습니다.";
             default -> "조건을 충족했습니다.";
         };
     }
@@ -313,6 +362,10 @@ public class EligibilityService {
             case "educationStatus" -> "학적 상태 정보가 없어 확인이 필요합니다.";
             case "houseOwner" -> "주택 보유 여부 정보가 없어 확인이 필요합니다.";
             case "housingOwnershipStatus" -> "주택 소유 상태 정보가 없어 확인이 필요합니다.";
+            case "graduationDate", "graduationMonths" -> "졸업 시점 정보가 없어 확인이 필요합니다.";
+            case "employmentType" -> "고용 형태 정보가 없어 확인이 필요합니다.";
+            case "smeEmployee" -> "중소기업 재직 여부 정보가 없어 확인이 필요합니다.";
+            case "jobSeekingStatus" -> "구직 상태 정보가 없어 확인이 필요합니다.";
             default -> "사용자 정보가 없어 확인이 필요합니다.";
         };
     }
@@ -337,6 +390,16 @@ public class EligibilityService {
             case "!=" -> numericUserValue != conditionValue;
             default -> false;
         };
+    }
+
+    Long calculateGraduationMonths(LocalDate graduationDate) {
+        if (graduationDate == null) {
+            return null;
+        }
+        return ChronoUnit.MONTHS.between(
+                graduationDate,
+                LocalDate.now(clock)
+        );
     }
 
     private boolean compareProfileRegion(
@@ -485,7 +548,16 @@ public class EligibilityService {
     }
 
     private String enumLabel(Enum<?> value) {
-        return value == null ? "미입력" : value.name();
+        if (value == null) {
+            return "미입력";
+        }
+        if (value instanceof EmploymentType employmentType) {
+            return employmentType.getLabel();
+        }
+        if (value instanceof JobSeekingStatus jobSeekingStatus) {
+            return jobSeekingStatus.getLabel();
+        }
+        return value.name();
     }
 
     private boolean isLegacyKey(String actualKey, String legacyKey) {

@@ -20,6 +20,14 @@ class ProfileFieldTest {
                 .contains(ProfileField.EDUCATION_STATUS);
         assertThat(ProfileField.fromKey("houseOwner"))
                 .contains(ProfileField.HOUSING_OWNERSHIP_STATUS);
+        assertThat(ProfileField.fromKey("graduationMonths"))
+                .contains(ProfileField.GRADUATION_MONTHS);
+        assertThat(ProfileField.fromKey("employmentType"))
+                .contains(ProfileField.EMPLOYMENT_TYPE);
+        assertThat(ProfileField.fromKey("smeEmployee"))
+                .contains(ProfileField.SME_EMPLOYEE);
+        assertThat(ProfileField.fromKey("jobSeekingStatus"))
+                .contains(ProfileField.JOB_SEEKING_STATUS);
     }
 
     @Test
