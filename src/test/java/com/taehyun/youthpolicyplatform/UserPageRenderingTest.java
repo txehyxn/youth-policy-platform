@@ -277,6 +277,8 @@ class UserPageRenderingTest {
                 .contains("method: \"PATCH\"")
                 .contains("AbortController")
                 .contains("latestRequestSequence")
+                .contains("inFlightPatch")
+                .contains("{...inFlightPatch, ...pendingPatch}")
                 .contains("550");
     }
 

@@ -26,6 +26,7 @@
     let latestRequestSequence = 0;
     let latestChangeSequence = 0;
     let pendingPatch = {};
+    let inFlightPatch = {};
 
     function valueFor(input) {
         if (input.value === "") {
@@ -93,7 +94,7 @@
 
     async function savePendingPatch() {
         window.clearTimeout(debounceTimer);
-        const patch = pendingPatch;
+        const patch = {...inFlightPatch, ...pendingPatch};
         pendingPatch = {};
 
         if (Object.keys(patch).length === 0) {
@@ -104,6 +105,7 @@
             activeController.abort();
         }
         activeController = new AbortController();
+        inFlightPatch = patch;
         const requestSequence = ++latestRequestSequence;
         const changeSequence = latestChangeSequence;
         setSaveStatus("saving", "저장 중...");
@@ -141,6 +143,7 @@
             }
 
             updateEligibilitySummary(body);
+            inFlightPatch = {};
             setSaveStatus("saved", "저장됨");
         } catch (error) {
             if (error.name === "AbortError") {
