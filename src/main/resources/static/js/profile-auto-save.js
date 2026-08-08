@@ -8,6 +8,10 @@
 
     const autoSaveUrl = form.dataset.autoSaveUrl;
     const saveStatus = document.getElementById("profileSaveStatus");
+    const emptyState = document.getElementById("profileEligibilityEmptyState");
+    const eligibilityResults = document.getElementById("profileEligibilityResults");
+    const profileFormTitle = document.getElementById("profileFormTitle");
+    const profileSubmitButton = document.getElementById("profileSubmitButton");
     const autoSaveFields = Array.from(
         form.querySelectorAll("[data-auto-save-field]")
     );
@@ -101,6 +105,15 @@
             return;
         }
 
+        const hasEnteredValue = Object.values(patch).some(function (value) {
+            return value !== null;
+        });
+        if (form.dataset.hasProfile !== "true" && !hasEnteredValue) {
+            inFlightPatch = {};
+            setSaveStatus("waiting", "첫 정보를 입력해주세요.");
+            return;
+        }
+
         if (activeController) {
             activeController.abort();
         }
@@ -143,6 +156,7 @@
             }
 
             updateEligibilitySummary(body);
+            markProfileAsCreated();
             inFlightPatch = {};
             setSaveStatus("saved", "저장됨");
         } catch (error) {
@@ -154,6 +168,18 @@
                 setSaveStatus("error", "저장하지 못했어요. 다시 시도해주세요.");
             }
         }
+    }
+
+    function markProfileAsCreated() {
+        if (form.dataset.hasProfile === "true") {
+            return;
+        }
+
+        form.dataset.hasProfile = "true";
+        emptyState.hidden = true;
+        eligibilityResults.hidden = false;
+        profileFormTitle.textContent = "내 정보 관리";
+        profileSubmitButton.textContent = "전체 내용 저장";
     }
 
     function updateEligibilitySummary(response) {

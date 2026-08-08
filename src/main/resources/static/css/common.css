@@ -306,6 +306,22 @@ textarea {
     margin: 24px 0 32px;
 }
 
+.profile-eligibility-empty-state {
+    padding: 16px 8px;
+    text-align: center;
+}
+
+.profile-eligibility-empty-state h2 {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.profile-eligibility-empty-state p {
+    margin: 14px 0 20px;
+    color: var(--color-muted);
+    line-height: 1.7;
+}
+
 .profile-eligibility-summary__header {
     display: flex;
     align-items: center;

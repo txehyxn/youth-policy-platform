@@ -265,6 +265,7 @@ class UserPageRenderingTest {
                 .contains("data-auto-save-field=\"educationStatus\"")
                 .contains("data-auto-save-field=\"housingOwnershipStatus\"")
                 .contains("data-profile-field=\"EMPLOYMENT_STATUS\"")
+                .contains("id=\"profileFormTitle\">내 정보 관리</h3>")
                 .contains("전체 내용 저장")
                 .contains("href=\"/benefits\"")
                 .contains("/js/profile-auto-save.js");
@@ -279,7 +280,38 @@ class UserPageRenderingTest {
                 .contains("latestRequestSequence")
                 .contains("inFlightPatch")
                 .contains("{...inFlightPatch, ...pendingPatch}")
+                .contains("markProfileAsCreated")
+                .contains("profileEligibilityEmptyState")
+                .contains("profileEligibilityResults")
+                .contains("Object.values(patch).some")
+                .contains("form.dataset.hasProfile !== \"true\"")
+                .contains("첫 정보를 입력해주세요.")
+                .contains("emptyState.hidden = true")
+                .contains("eligibilityResults.hidden = false")
+                .contains("profileFormTitle.textContent = \"내 정보 관리\"")
+                .contains("profileSubmitButton.textContent = \"전체 내용 저장\"")
                 .contains("550");
+    }
+
+    @Test
+    void profilePageWithoutProfileShowsGuidanceInsteadOfVisibleZeroSummary() throws Exception {
+        User user = saveUser("new-profile-guidance@example.com", Role.USER);
+        HttpClient client = newClient();
+        login(client, user.getEmail());
+
+        HttpResponse<String> response = get(client, "/my/profile");
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body())
+                .contains("내 정보를 입력하면")
+                .contains("받을 수 있는 정책을 바로 확인할 수 있어요")
+                .contains("확인 가능한 정책이 실시간으로 업데이트됩니다.")
+                .contains("첫 정보 입력하기")
+                .contains("id=\"profileEligibilityEmptyState\"")
+                .contains("id=\"profileEligibilityResults\" hidden=\"hidden\"")
+                .contains("data-has-profile=\"false\"")
+                .contains("id=\"profileFormTitle\">프로필 등록</h3>")
+                .contains("id=\"profileSubmitButton\"");
     }
 
     @Test

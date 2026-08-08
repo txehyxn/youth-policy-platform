@@ -23,7 +23,19 @@
     프로필이 저장되었습니다.
 </p>
 
-<section class="card profile-eligibility-summary" aria-labelledby="eligibilitySummaryTitle">
+<section class="card profile-eligibility-summary" aria-label="정책 판정 안내">
+    <div id="profileEligibilityEmptyState" class="profile-eligibility-empty-state"
+         th:attr="hidden=${hasProfile} ? 'hidden' : null">
+        <h2>내 정보를 입력하면<br>받을 수 있는 정책을 바로 확인할 수 있어요</h2>
+        <p>
+            정보를 입력할 때마다<br>
+            확인 가능한 정책이 실시간으로 업데이트됩니다.
+        </p>
+        <a class="button" href="#birthDate">첫 정보 입력하기</a>
+    </div>
+
+    <div id="profileEligibilityResults"
+         th:attr="hidden=${!hasProfile} ? 'hidden' : null">
     <div class="profile-eligibility-summary__header">
         <div>
             <h2 id="eligibilitySummaryTitle">내 조건으로 확인한 정책</h2>
@@ -75,10 +87,12 @@
         본 결과는 입력한 정보와 등록된 정책 조건을 기준으로 한 사전 확인 결과이며,
         최종 자격은 신청기관의 심사를 통해 결정됩니다.
     </p>
+    </div>
 </section>
 
-<h3 th:if="${hasProfile}">프로필 수정</h3>
-<h3 th:unless="${hasProfile}">프로필 등록</h3>
+<h3 id="profileFormTitle" th:text="${hasProfile ? '내 정보 관리' : '프로필 등록'}">
+    프로필 등록
+</h3>
 
 <div class="card profile-income-summary" th:if="${hasProfile}">
     <strong>중위소득 비율 참고값</strong>
@@ -93,7 +107,8 @@
 </div>
 
 <form id="profileForm" class="card profile-form" th:action="@{/my/profile}" method="post"
-      data-auto-save-url="/api/my/profile">
+      data-auto-save-url="/api/my/profile"
+      th:attr="data-has-profile=${hasProfile}">
 
     <input type="hidden"
            name="returnBenefitId"
@@ -197,7 +212,7 @@
             변경 내용은 자동으로 저장됩니다.
         </span>
 
-        <button type="submit"
+        <button id="profileSubmitButton" type="submit"
                 th:text="${hasProfile ? '전체 내용 저장' : '프로필 등록'}">
         </button>
     </div>
